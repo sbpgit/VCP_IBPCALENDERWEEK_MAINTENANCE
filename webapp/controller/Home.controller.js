@@ -261,6 +261,7 @@ sap.ui.define([
               }
             })
           },
+          //Live Change of input
           onPeriodChange: function (oEvent) {
             var input = oEvent.getSource();
             var inputValue = input.getValue();
