@@ -222,13 +222,19 @@ sap.ui.define([
             var tableData = that.byId("idTab").getItems();
             var final = {}, finalArray = [];
             tableData.forEach(el => {
+              if(el.getCells()[7].getText() == ''){
+                 var monthWeight = null;
+              }
+              else{
+                var monthWeight = el.getCells()[7].getText();
+              }
               final.TPLEVEL = parseInt(el.getCells()[0].getText()),
                 final.PERIODID = el.getCells()[2].getText(),
                 final.LEVEL = el.getCells()[1].getText().replace(/(\S)\s+/g, "$1"),
                 final.PERIODSTART = that.formattedDateStart(el.getCells()[3].getText(), ''),
                 final.PERIODEND = that.formattedDateStart(el.getCells()[4].getText(), 'X'),
                 final.PERIODDESC = el.getCells()[5].getValue(),
-                final.MONTHWEIGHT = el.getCells()[7].getText(),
+                final.MONTHWEIGHT = monthWeight,
                 final.WEEKWEIGHT = null,
                 final.WEEK_STARTDATE = null,
                 final.WEEK_ENDDATE = null,
