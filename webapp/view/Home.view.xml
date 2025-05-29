@@ -12,7 +12,7 @@
                                        <Table id="idTab" items="{path: '/results'}" growingScrollToLoad="true" growingThreshold="1000" growing="true" rememberSelections="false"
                                                         itemPress="onhandlePress" mode="None" selectionChange="onhandlePress" sticky="ColumnHeaders">
                                                         <columns>
-                                                        <Column >
+                                                        <Column visible="false">
                                                                 <Text text="TP Level"/>
                                                             </Column>
                                                             <Column >
