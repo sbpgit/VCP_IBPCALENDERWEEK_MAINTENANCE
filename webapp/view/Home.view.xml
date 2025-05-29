@@ -1,0 +1,86 @@
+<mvc:View controllerName="vcpapp.vcpibpcalendarmaintenance.controller.Home"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns:u="sap.ui.unified"
+    xmlns="sap.m" xmlns:core="sap.ui.core"
+	core:require="{DateTimeType: 'sap/ui/model/type/DateTime'}">
+    <Page id="page" title="{i18n>title}">
+    <headerContent>
+<HBox id="idHBox100" alignItems="End" justifyContent="End" width="100%" visible="true">                                                                                                                                    
+                                        </HBox>
+    </headerContent>       
+                                       <VBox >
+                                       <Table id="idTab" items="{path: '/results'}" growingScrollToLoad="true" growingThreshold="1000" growing="true" rememberSelections="false"
+                                                        itemPress="onhandlePress" mode="None" selectionChange="onhandlePress" sticky="ColumnHeaders">
+                                                        <columns>
+                                                        <Column >
+                                                                <Text text="TP Level"/>
+                                                            </Column>
+                                                            <Column >
+                                                                <Text text="Level"/>
+                                                            </Column>
+                                                            <Column >
+                                                                <Text text="Period ID"/>
+                                                            </Column>
+                                                                <Column >
+                                                                <Text text="Period Start" width="auto"/>
+                                                            </Column>
+                                                                <Column>
+                                                                <Text text="Period End" width="auto"/>
+                                                            </Column>
+                                                                <Column >
+                                                                <Text text="Period Desc."/>
+                                                            </Column>
+                                                                <Column >
+                                                                <Text text="Week Weight"/>
+                                                            </Column>
+                                                                <Column >
+                                                                <Text text="Month Weight"/>
+                                                            </Column>
+                                                                <Column visible="false">
+                                                                <Text text="Week Start Date" />
+                                                            </Column>
+                                                            <Column visible="false">
+                                                                <Text text="Week End Date" />
+                                                            </Column>                                                           
+                                                               
+                                                        </columns>
+                                                        <items>
+                                                            <ColumnListItem>
+                                                       
+                                                                <cells>
+                                                                <Text text="{TPLEVEL} "/>
+                                                                        <Text text="{LEVEL} "/>
+                                                                        <Text text="{PERIODID}"/>
+                                                                        <Text text="{PERIODSTART_UTC}"/>
+                                                                        <Text text="{PERIODEND_UTC}"/>
+                                                                        <Input id="idPeriodDes" type="Text" value="{PERIODDESC}" liveChange="onPeriodChange" valueState="{path:'ISDUPLICATEDESC', formatter:'.formatter.formatErrorStyle'}"></Input>
+                                                                        <Text text="{WEEKWEIGHT}"/>
+                                                                         <Text text="{MONTHWEIGHT}"/>
+                                                                        <Text text="{PERIODSTART_UTC}"/>
+                                                                        <Text text="{PERIODEND_UTC}"/>
+                                                                        
+                                                                </cells>
+                                                            </ColumnListItem>
+                                                        </items>
+                                                       
+                                                    </Table>
+                                       </VBox>
+                                       <footer>
+                                        <OverflowToolbar >
+                                            <u:FileUploader id="FileUploader" fileType="XLSX,xlsx,csv" buttonOnly="true" class="Emp" iconOnly="true"
+                                                    change="onUpload1" visible="true" sameFilenameAllowed="true"/>
+                                                    <MenuButton id="idMenuSCM" type="Neutral" buttonMode="Split" useDefaultActionOnly="true" class="classOverlay" 
+                                                    defaultAction="onPressBrowse" text="Upload" icon="sap-icon://upload">
+                                                <menu>
+                                                    <Menu>
+                                                        <MenuItem text="Download Template" press="oDownloadTemplate"/>
+                                                    </Menu>
+                                                </menu>
+                                            </MenuButton>                                                   
+                                                    <ToolbarSpacer ></ToolbarSpacer>
+                                                    <Button id="idSave" text="Save" type="Emphasized" enabled="true" press="onSavePress"></Button>
+                                                    </OverflowToolbar>
+                                       </footer>
+    </Page>
+</mvc:View>
+ 
