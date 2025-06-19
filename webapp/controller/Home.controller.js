@@ -10,6 +10,7 @@ sap.ui.define([
     "use strict";
     var that;
     var EdmType = exportLibrary.EdmType;
+    
     return Controller.extend("vcpapp.vcpibpcalendarmaintenance.controller.Home", {
         formatter: formatter,
         onInit() {
