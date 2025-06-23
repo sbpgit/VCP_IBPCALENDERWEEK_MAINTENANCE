@@ -18,7 +18,9 @@ sap.ui.define([
       this.getOwnerComponent().getModel("oModel").callFunction("/getTelescopicValues", {
         success: function (oData) {
           var data = JSON.parse(oData.getTelescopicValues);
+          if(data?.MaxFcharPlan != null){
           that.teleData = new Date(data?.MaxFcharPlan);
+          }
         },
         error: function (e) {
 
@@ -124,8 +126,8 @@ sap.ui.define([
             }
             else {
               sap.ui.core.BusyIndicator.hide();
-              if(that.uploadFlag !== "X"){
-              return sap.m.MessageToast.show("No data available in the uploaded file");
+              if (that.uploadFlag !== "X") {
+                return sap.m.MessageToast.show("No data available in the uploaded file");
               }
               that.uploadFlag = '';
             }
@@ -169,135 +171,140 @@ sap.ui.define([
         return dateA - dateB;
       });
       var endDate = that.teleData;
-      if (endDate != undefined) {
-        const tableData = that.ibpCalenderWeek;
-        const excelData = data;
+      if (that.ibpCalenderWeek.length > 0) {
+        if (endDate != undefined || endDate != null) {
+          const tableData = that.ibpCalenderWeek;
+          const excelData = data;
 
-        // Split by TPLEVEL once
-        const getByLevel = (arr, level) => arr.filter(item => item.TPLEVEL === level);
+          // Split by TPLEVEL once
+          const getByLevel = (arr, level) => arr.filter(item => item.TPLEVEL === level);
 
-        const weekTableData = getByLevel(tableData, 3);
-        const monthTableData = getByLevel(tableData, 4);
-        const quarterTableData = getByLevel(tableData, 5);
+          const weekTableData = getByLevel(tableData, 3);
+          const monthTableData = getByLevel(tableData, 4);
+          const quarterTableData = getByLevel(tableData, 5);
 
-        const weekExcelData = getByLevel(excelData, 3);
-        const monthExcelData = getByLevel(excelData, 4);
-        const quarterExcelData = getByLevel(excelData, 5);
+          const weekExcelData = getByLevel(excelData, 3);
+          const monthExcelData = getByLevel(excelData, 4);
+          const quarterExcelData = getByLevel(excelData, 5);
 
-        // Check date continuity
-        const weekUploadData = that.checkContinuousFlow(weekExcelData);
-        if (!weekUploadData) {
-          sap.ui.core.BusyIndicator.hide();
-          return sap.m.MessageToast.show("Discontinuity in week dates. Please re-upload correct file");
-        }
+          // Check date continuity
+          const weekUploadData = that.checkContinuousFlow(weekExcelData);
+          if (!weekUploadData) {
+            sap.ui.core.BusyIndicator.hide();
+            return sap.m.MessageToast.show("Discontinuity in week dates. Please re-upload correct file");
+          }
 
-        const monthUploadData = that.checkContinuousFlow(monthExcelData);
-        if (!monthUploadData) {
-          sap.ui.core.BusyIndicator.hide();
-          return sap.m.MessageToast.show("Discontinuity in month dates. Please re-upload correct file");
-        }
+          const monthUploadData = that.checkContinuousFlow(monthExcelData);
+          if (!monthUploadData) {
+            sap.ui.core.BusyIndicator.hide();
+            return sap.m.MessageToast.show("Discontinuity in month dates. Please re-upload correct file");
+          }
 
-        const quarterUploadData = that.checkContinuousFlow(quarterExcelData);
-        if (!quarterUploadData) {
-          sap.ui.core.BusyIndicator.hide();
-          return sap.m.MessageToast.show("Discontinuity in quarter dates. Please re-upload correct file");
-        }
-        //Check if uploaded data ends with same Period 
-        const lastFinalWeek = weekExcelData.at(-1);
-        const lastMonth = monthExcelData.at(-1);
-        const lastQuarter = quarterExcelData.at(-1);
+          const quarterUploadData = that.checkContinuousFlow(quarterExcelData);
+          if (!quarterUploadData) {
+            sap.ui.core.BusyIndicator.hide();
+            return sap.m.MessageToast.show("Discontinuity in quarter dates. Please re-upload correct file");
+          }
+          //Check if uploaded data ends with same Period 
+          const lastFinalWeek = weekExcelData.at(-1);
+          const lastMonth = monthExcelData.at(-1);
+          const lastQuarter = quarterExcelData.at(-1);
 
-        // Compare last month with last week
-        const isMonthMatchingWeek = new Date(lastMonth.PERIODEND_UTC).getTime() === new Date(lastFinalWeek.PERIODEND_UTC).getTime();
-        if (!isMonthMatchingWeek) {
-          sap.ui.core.BusyIndicator.hide();
-          return sap.m.MessageToast.show("Monthly data is incorrect. Doesn't match with Weekly Data");
-        }
+          // Compare last month with last week
+          const isMonthMatchingWeek = new Date(lastMonth.PERIODEND_UTC).getTime() === new Date(lastFinalWeek.PERIODEND_UTC).getTime();
+          if (!isMonthMatchingWeek) {
+            sap.ui.core.BusyIndicator.hide();
+            return sap.m.MessageToast.show("Monthly data is incorrect. Doesn't match with Weekly Data");
+          }
 
-        // Compare last month with quarter range
-        const isMonthInQuarter =
-          new Date(lastMonth.PERIODSTART_UTC) >= new Date(lastQuarter.PERIODSTART_UTC) &&
-          new Date(lastMonth.PERIODEND_UTC) <= new Date(lastQuarter.PERIODEND_UTC);
+          // Compare last month with quarter range
+          const isMonthInQuarter =
+            new Date(lastMonth.PERIODSTART_UTC) >= new Date(lastQuarter.PERIODSTART_UTC) &&
+            new Date(lastMonth.PERIODEND_UTC) <= new Date(lastQuarter.PERIODEND_UTC);
 
-        if (!isMonthInQuarter) {
-          sap.ui.core.BusyIndicator.hide();
-          return sap.m.MessageToast.show("Quarter data is incorrect. Doesn't match with Monthly Data");
-        }
+          if (!isMonthInQuarter) {
+            sap.ui.core.BusyIndicator.hide();
+            return sap.m.MessageToast.show("Quarter data is incorrect. Doesn't match with Monthly Data");
+          }
 
-        //Function for Weekly data upload
-        var finalWeekData = that.finalWeekData(weekTableData, weekExcelData, that.teleData);
+          //Function for Weekly data upload
+          var finalWeekData = that.finalWeekData(weekTableData, weekExcelData, that.teleData);
 
-        //Function for Monthly data upload
-        var finalMonthData = that.finalMonthData(monthTableData, monthExcelData, that.teleData);
+          //Function for Monthly data upload
+          var finalMonthData = that.finalMonthData(monthTableData, monthExcelData, that.teleData);
 
-        // //Function for Quarter data upload
-        var finalQuarterData = that.finalQuarterData(quarterTableData, quarterExcelData, that.teleData);
+          // //Function for Quarter data upload
+          var finalQuarterData = that.finalQuarterData(quarterTableData, quarterExcelData, that.teleData);
 
-        if (finalWeekData.length === 0 || finalMonthData.length === 0 || finalQuarterData.length === 0) {
-          sap.ui.core.BusyIndicator.hide();
-          return sap.m.MessageToast.show("Continuous data not available. Please re-uplaod correct data")
-        }
-        else {
-          var finalMergdeData = [...finalWeekData, ...finalMonthData, ...finalQuarterData];
-          finalMergdeData.forEach(obj => obj.PERIODID = Number(obj.PERIODID));
-          // Fix sequence
-          for (let i = 1; i < finalMergdeData.length; i++) {
-            let prev = Number(finalMergdeData[i - 1].PERIODID);
-            let curr = Number(finalMergdeData[i].PERIODID);
-          
-            if (isNaN(curr) || curr <= prev) {
-              if (!isNaN(prev)) {
-                finalMergdeData[i].PERIODID = prev + 1;
-              } else {
-                finalMergdeData[i].PERIODID = 1; // fallback if even previous is bad
+          if (finalWeekData.length === 0 || finalMonthData.length === 0 || finalQuarterData.length === 0) {
+            sap.ui.core.BusyIndicator.hide();
+            return sap.m.MessageToast.show("Continuous data not available. Please re-uplaod correct data")
+          }
+          else {
+            var finalMergdeData = [...finalWeekData, ...finalMonthData, ...finalQuarterData];
+            finalMergdeData.forEach(obj => obj.PERIODID = Number(obj.PERIODID));
+            // Fix sequence
+            for (let i = 1; i < finalMergdeData.length; i++) {
+              let prev = Number(finalMergdeData[i - 1].PERIODID);
+              let curr = Number(finalMergdeData[i].PERIODID);
+
+              if (isNaN(curr) || curr <= prev) {
+                if (!isNaN(prev)) {
+                  finalMergdeData[i].PERIODID = prev + 1;
+                } else {
+                  finalMergdeData[i].PERIODID = 1; // fallback if even previous is bad
+                }
               }
             }
+            that.ibpCalenderWeek = finalMergdeData;
+            var newModel = new JSONModel();
+            newModel.setData({ results: finalMergdeData });
+            that.byId("idTab").setModel(newModel);
           }
-          that.ibpCalenderWeek = finalMergdeData;
-          var newModel = new JSONModel();
-          newModel.setData({ results: finalMergdeData });
-          that.byId("idTab").setModel(newModel);
-        }
 
-        if (that.Flag === "X") {
-          sap.m.MessageToast.show("Duplicates exists in Period Descriptions. Please recheck")
-          that.byId("idSave").setEnabled(false);
+          if (that.Flag === "X") {
+            sap.m.MessageToast.show("Duplicates exists in Period Descriptions. Please recheck")
+            that.byId("idSave").setEnabled(false);
+          }
+          else {
+            that.Flag = '';
+            that.byId("idSave").setEnabled(true);
+          }
         }
         else {
-          that.Flag = '';
-          that.byId("idSave").setEnabled(true);
+          data.forEach(el => {
+            el.PERIODSTART_UTC = that.formattedDate(new Date(el.PERIODSTART).toISOString());
+            el.PERIODEND_UTC = that.formattedDate(new Date(el.PERIODEND).toISOString());
+            el.TPLEVEL = parseInt(el.TPLEVEL);
+          });
+          //Check for duplicate period desc
+          const periodDescMap = new Map();
+          data.forEach(obj => {
+            const desc = obj.PERIODDESC;
+            periodDescMap.set(desc, (periodDescMap.get(desc) || 0) + 1);
+          });
+          data = data.map(obj => {
+            if (periodDescMap.get(obj.PERIODDESC) > 1) {
+              that.Flag = "X";
+              return { ...obj, ISDUPLICATEDESC: true };
+            }
+            return obj;
+          });
+          var newModel = new JSONModel();
+          newModel.setData({ results: data });
+          that.byId("idTab").setModel(newModel);
+          if (that.Flag === "X") {
+            sap.m.MessageToast.show("Duplicates exists in Period Descriptions. Please recheck")
+            that.byId("idSave").setEnabled(false);
+          }
+          else {
+            that.Flag = '';
+            that.byId("idSave").setEnabled(true);
+          }
         }
       }
       else {
-        data.forEach(el => {
-          el.PERIODSTART_UTC = that.formattedDate(new Date(el.PERIODSTART).toISOString());
-          el.PERIODEND_UTC = that.formattedDate(new Date(el.PERIODEND).toISOString());
-          el.TPLEVEL = parseInt(el.TPLEVEL);
-        });
-        //Check for duplicate period desc
-        const periodDescMap = new Map();
-        data.forEach(obj => {
-          const desc = obj.PERIODDESC;
-          periodDescMap.set(desc, (periodDescMap.get(desc) || 0) + 1);
-        });
-        data = data.map(obj => {
-          if (periodDescMap.get(obj.PERIODDESC) > 1) {
-            that.Flag = "X";
-            return { ...obj, ISDUPLICATEDESC: true };
-          }
-          return obj;
-        });
-        var newModel = new JSONModel();
-        newModel.setData({ results: data });
-        that.byId("idTab").setModel(newModel);
-        if (that.Flag === "X") {
-          sap.m.MessageToast.show("Duplicates exists in Period Descriptions. Please recheck")
-          that.byId("idSave").setEnabled(false);
-        }
-        else {
-          that.Flag = '';
-          that.byId("idSave").setEnabled(true);
-        }
+        that.emptIBPCalenderWeek(data);
       }
       sap.ui.core.BusyIndicator.hide();
     },
@@ -418,20 +425,42 @@ sap.ui.define([
               label: key
             });
           });
-
+        var oSettings = {
+          workbook: {
+            columns: aCols
+          },
+          dataSource: [],
+          fileName: sFileName,
+          worker: false
+        };
+        var oSheet = new Spreadsheet(oSettings);
+        oSheet.build().finally(function () {
+          oSheet.destroy();
+        });
       }
-      var oSettings = {
-        workbook: {
-          columns: aCols
-        },
-        dataSource: [],
-        fileName: sFileName,
-        worker: false
-      };
-      var oSheet = new Spreadsheet(oSettings);
-      oSheet.build().finally(function () {
-        oSheet.destroy();
-      });
+      else {
+        const allowedKeys = ['LEVEL', 'PERIODSTART', 'PERIODEND', 'PERIODDESC', 'WEEKWEIGHT', 'MONTHWEIGHT'];
+        allowedKeys
+          .forEach(key => {
+            aCols.push({
+              property: key,
+              type: EdmType.String,
+              label: key
+            });
+          });
+        var oSettings = {
+          workbook: {
+            columns: aCols
+          },
+          dataSource: [],
+          fileName: sFileName,
+          worker: false
+        };
+        var oSheet = new Spreadsheet(oSettings);
+        oSheet.build().finally(function () {
+          oSheet.destroy();
+        });
+      }
     },
     checkContinuousFlow: function (periods) {
       for (let i = 1; i < periods.length; i++) {
@@ -532,6 +561,91 @@ sap.ui.define([
       }
 
       return finalWeekDataConcat;
-    }
+    },
+    emptIBPCalenderWeek: function (data) {
+      const excelData = data;
+       // Split by TPLEVEL once
+       const getByLevel = (arr, level) => arr.filter(item => item.TPLEVEL === level);
+
+      const weekExcelData = getByLevel(excelData, 3);
+      const monthExcelData = getByLevel(excelData, 4);
+      const quarterExcelData = getByLevel(excelData, 5);
+
+      // Check date continuity
+      const weekUploadData = that.checkContinuousFlow(weekExcelData);
+      if (!weekUploadData) {
+        sap.ui.core.BusyIndicator.hide();
+        return sap.m.MessageToast.show("Discontinuity in week dates. Please re-upload correct file");
+      }
+
+      const monthUploadData = that.checkContinuousFlow(monthExcelData);
+      if (!monthUploadData) {
+        sap.ui.core.BusyIndicator.hide();
+        return sap.m.MessageToast.show("Discontinuity in month dates. Please re-upload correct file");
+      }
+
+      const quarterUploadData = that.checkContinuousFlow(quarterExcelData);
+      if (!quarterUploadData) {
+        sap.ui.core.BusyIndicator.hide();
+        return sap.m.MessageToast.show("Discontinuity in quarter dates. Please re-upload correct file");
+      }
+       //Check if uploaded data ends with same Period 
+       const lastFinalWeek = weekExcelData.at(-1);
+       const lastMonth = monthExcelData.at(-1);
+       const lastQuarter = quarterExcelData.at(-1);
+
+       // Compare last month with last week
+       const isMonthMatchingWeek = new Date(lastMonth.PERIODEND_UTC).getTime() === new Date(lastFinalWeek.PERIODEND_UTC).getTime();
+       if (!isMonthMatchingWeek) {
+         sap.ui.core.BusyIndicator.hide();
+         return sap.m.MessageToast.show("Monthly data is incorrect. Doesn't match with Weekly Data");
+       }
+
+       // Compare last month with quarter range
+       const isMonthInQuarter =
+         new Date(lastMonth.PERIODSTART_UTC) >= new Date(lastQuarter.PERIODSTART_UTC) &&
+         new Date(lastMonth.PERIODEND_UTC) <= new Date(lastQuarter.PERIODEND_UTC);
+
+       if (!isMonthInQuarter) {
+         sap.ui.core.BusyIndicator.hide();
+         return sap.m.MessageToast.show("Quarter data is incorrect. Doesn't match with Monthly Data");
+       }
+       var finalMergdeData = [...weekExcelData, ...monthExcelData, ...quarterExcelData];
+      //  finalMergdeData.forEach(obj => obj.PERIODID = Number(obj.PERIODID));
+       // Fix sequence
+       for (let i = 0; i < finalMergdeData.length; i++) {         
+             finalMergdeData[i].PERIODID =i+1;          
+       }
+       that.ibpCalenderWeek = finalMergdeData;
+       finalMergdeData.forEach(el => {
+        el.PERIODSTART_UTC = that.formattedDate(new Date(el.PERIODSTART).toISOString());
+        el.PERIODEND_UTC = that.formattedDate(new Date(el.PERIODEND).toISOString());
+        el.TPLEVEL = parseInt(el.TPLEVEL);
+      });
+      //Check for duplicate period desc
+      const periodDescMap = new Map();
+      finalMergdeData.forEach(obj => {
+        const desc = obj.PERIODDESC;
+        periodDescMap.set(desc, (periodDescMap.get(desc) || 0) + 1);
+      });
+      finalMergdeData = finalMergdeData.map(obj => {
+        if (periodDescMap.get(obj.PERIODDESC) > 1) {
+          that.Flag = "X";
+          return { ...obj, ISDUPLICATEDESC: true };
+        }
+        return obj;
+      });
+      var newModel = new JSONModel();
+      newModel.setData({ results: finalMergdeData });
+      that.byId("idTab").setModel(newModel);
+      if (that.Flag === "X") {
+        sap.m.MessageToast.show("Duplicates exists in Period Descriptions. Please recheck")
+        that.byId("idSave").setEnabled(false);
+      }
+      else {
+        that.Flag = '';
+        that.byId("idSave").setEnabled(true);
+      }
+    },
   });
 });
