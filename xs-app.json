@@ -8,13 +8,25 @@
       "destination": "ConfigProdAuth",
       "authenticationType": "xsuaa",
       "csrfProtection": false,
-      "scope":{
-          "GET": ["$XSAPPNAME.User"],
-          "PUT": ["$XSAPPNAME.User"],
-          "PATCH": ["$XSAPPNAME.User"],
-          "POST": ["$XSAPPNAME.User"],
-          "DELETE": ["$XSAPPNAME.User"],
-          "default": ["$XSAPPNAME.User"]
+      "scope": {
+        "GET": [
+          "$XSAPPNAME.admin"
+        ],
+        "PUT": [
+          "$XSAPPNAME.admin"
+        ],
+        "PATCH": [
+          "$XSAPPNAME.admin"
+        ],
+        "POST": [
+          "$XSAPPNAME.admin"
+        ],
+        "DELETE": [
+          "$XSAPPNAME.admin"
+        ],
+        "default": [
+          "$XSAPPNAME.admin"
+        ]
       }
     },
     {
@@ -25,27 +37,21 @@
       "csrfProtection": false,
       "scope": {
         "GET": [
-          "$XSAPPNAME.User",
           "$XSAPPNAME.admin"
         ],
         "PUT": [
-          "$XSAPPNAME.User",
           "$XSAPPNAME.admin"
         ],
         "PATCH": [
-          "$XSAPPNAME.User",
           "$XSAPPNAME.admin"
         ],
         "POST": [
-          "$XSAPPNAME.User",
           "$XSAPPNAME.admin"
         ],
         "DELETE": [
-          "$XSAPPNAME.User",
           "$XSAPPNAME.admin"
         ],
         "default": [
-          "$XSAPPNAME.User",
           "$XSAPPNAME.admin"
         ]
       }

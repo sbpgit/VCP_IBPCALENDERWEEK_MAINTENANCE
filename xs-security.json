@@ -20,16 +20,7 @@
     "description": "Read authorization information"
   }
 ],
-"role-templates": [
-
-  {
-    "name": "VCPUserRole",
-    "description": "UAA VCPUserRole",
-    "scope-references": [
-      "$XSAPPNAME.User"
-    ]
-  },
-  
+"role-templates": [  
   {
     "name": "VCPSupportRole",
     "description": "UAA VCPSupportRole",
