@@ -359,8 +359,8 @@ sap.ui.define([
           final.PERIODDESC = el.getCells()[5].getValue(),
           final.MONTHWEIGHT = monthWeight,
           final.WEEKWEIGHT = 7,
-          final.WEEK_STARTDATE = null,
-          final.WEEK_ENDDATE = null,
+          final.WEEK_STARTDATE = el.getCells()[8].getText(),
+          final.WEEK_ENDDATE = el.getCells()[9].getText(),
           finalArray.push(final);
         final = {};
       })
