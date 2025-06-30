@@ -196,7 +196,8 @@ sap.ui.define([
                     const excelData = data;
                     var sameData = that.compareArrays(tableData, excelData);
                     if (sameData) {
-                        return MessageToast.show("Same file uploaded");
+                        sap.ui.core.BusyIndicator.hide();
+                        return sap.m.MessageToast.show("Same file uploaded");
                     }
                     // Split by TPLEVEL once
                     const getByLevel = (arr, level) => arr.filter(item => item.TPLEVEL === level);
@@ -268,6 +269,10 @@ sap.ui.define([
                         // Fix sequence
                         for (let i = 1; i < finalMergdeData.length; i++) {
                             let prev = Number(finalMergdeData[i - 1].PERIODID);
+                            if(Number.isNaN(prev)){
+                                finalMergdeData[i - 1].PERIODID=0;
+                                prev = 0;
+                            }
                             let curr = Number(finalMergdeData[i].PERIODID);
 
                             if (isNaN(curr) || curr <= prev) {
@@ -504,13 +509,15 @@ sap.ui.define([
 
         finalWeekData: function (tabData, excelData, date) {
             var finalWeekDataConcat = []
+            const getSortableDate = dateVal => new Date(dateVal).toISOString().split("T")[0];
             const indexInWeek = excelData.findIndex(el =>
-                new Date(el.PERIODSTART_UTC) <= new Date(date) &&
-                new Date(el.PERIODEND_UTC) >= new Date(date)
+                getSortableDate(el.PERIODSTART_UTC) <= getSortableDate(date) &&
+                getSortableDate(el.PERIODEND_UTC) >= getSortableDate(date)
             );
             if (indexInWeek === -1) {
-                const findTableMatch = tabData.findIndex(el => (el.PERIODSTART_UTC) === (excelData[0].PERIODSTART_UTC)
-                    && (el.PERIODEND_UTC) === (excelData[0].PERIODEND_UTC));
+
+                const findTableMatch = tabData.findIndex(el => getSortableDate(el.PERIODSTART_UTC) === getSortableDate(excelData[0].PERIODSTART_UTC)
+                    && getSortableDate(el.PERIODEND_UTC) === getSortableDate(excelData[0].PERIODEND_UTC));
                 if (findTableMatch != -1) {
                     var weekTableSlicedData = tabData.slice(0, findTableMatch);
                     finalWeekDataConcat = weekTableSlicedData.concat(excelData);
@@ -522,7 +529,8 @@ sap.ui.define([
             }
             else {
                 var excelIndex = excelData.slice(indexInWeek + 1);
-                var tabIndex = tabData.findIndex(el => el.PERIODSTART_UTC === excelIndex[0].PERIODSTART_UTC && el.PERIODEND_UTC === excelIndex[0].PERIODEND_UTC)
+                var tabIndex = tabData.findIndex(el => getSortableDate(el.PERIODSTART_UTC) === getSortableDate(excelIndex[0].PERIODSTART_UTC) 
+                && getSortableDate(el.PERIODEND_UTC) === getSortableDate(excelIndex[0].PERIODEND_UTC))
                 var tableData1 = tabData.slice(0, tabIndex + 1);
                 finalWeekDataConcat = tableData1.concat(excelIndex);
 
@@ -531,14 +539,15 @@ sap.ui.define([
             return finalWeekDataConcat;
         },
         finalMonthData: function (tabData, excelData, date) {
-            var finalWeekDataConcat = []
+            var finalWeekDataConcat = [];
+            const getSortableMonth = dateVal => new Date(dateVal).toISOString().split("T")[0];
             const indexInWeek = excelData.findIndex(el =>
-                new Date(el.PERIODSTART_UTC) <= new Date(date) &&
-                new Date(el.PERIODEND_UTC) >= new Date(date)
+                getSortableMonth(el.PERIODSTART_UTC) <= getSortableMonth(date) &&
+                getSortableMonth(el.PERIODEND_UTC) >= getSortableMonth(date)
             );
             if (indexInWeek === -1) {
-                const findTableMatch = tabData.findIndex(el => (el.PERIODSTART_UTC) === (excelData[0].PERIODSTART_UTC)
-                    && (el.PERIODEND_UTC) === (excelData[0].PERIODEND_UTC));
+                const findTableMatch = tabData.findIndex(el => getSortableMonth(el.PERIODSTART_UTC) === getSortableMonth(excelData[0].PERIODSTART_UTC)
+                    && getSortableMonth(el.PERIODEND_UTC) === getSortableMonth(excelData[0].PERIODEND_UTC));
                 if (findTableMatch != -1) {
                     var weekTableSlicedData = tabData.slice(0, findTableMatch);
                     finalWeekDataConcat = weekTableSlicedData.concat(excelData);
@@ -550,7 +559,8 @@ sap.ui.define([
             }
             else {
                 var excelIndex = excelData.slice(indexInWeek + 1);
-                var tabIndex = tabData.findIndex(el => el.PERIODSTART_UTC === excelIndex[0].PERIODSTART_UTC && el.PERIODEND_UTC === excelIndex[0].PERIODEND_UTC)
+                var tabIndex = tabData.findIndex(el => getSortableMonth(el.PERIODSTART_UTC) === getSortableMonth(excelIndex[0].PERIODSTART_UTC)
+                 && getSortableMonth(el.PERIODEND_UTC) === getSortableMonth(excelIndex[0].PERIODEND_UTC))
                 var tableData1 = tabData.slice(0, tabIndex);
                 finalWeekDataConcat = tableData1.concat(excelIndex);
 
@@ -559,14 +569,15 @@ sap.ui.define([
             return finalWeekDataConcat;
         },
         finalQuarterData: function (tabData, excelData, date) {
-            var finalWeekDataConcat = []
+            var finalWeekDataConcat = [];
+            const getSortableQrtr = dateVal => new Date(dateVal).toISOString().split("T")[0];
             const indexInWeek = excelData.findIndex(el =>
-                new Date(el.PERIODSTART_UTC) <= new Date(date) &&
-                new Date(el.PERIODEND_UTC) >= new Date(date)
+                getSortableQrtr(el.PERIODSTART_UTC) <= getSortableQrtr(date) &&
+                getSortableQrtr(el.PERIODEND_UTC) >= getSortableQrtr(date)
             );
             if (indexInWeek === -1) {
-                const findTableMatch = tabData.findIndex(el => (el.PERIODSTART_UTC) === (excelData[0].PERIODSTART_UTC)
-                    && (el.PERIODEND_UTC) === (excelData[0].PERIODEND_UTC));
+                const findTableMatch = tabData.findIndex(el => getSortableQrtr(el.PERIODSTART_UTC) === getSortableQrtr(excelData[0].PERIODSTART_UTC)
+                    && getSortableQrtr(el.PERIODEND_UTC) === getSortableQrtr(excelData[0].PERIODEND_UTC));
                 if (findTableMatch != -1) {
                     var weekTableSlicedData = tabData.slice(0, findTableMatch);
                     finalWeekDataConcat = weekTableSlicedData.concat(excelData);
@@ -578,7 +589,8 @@ sap.ui.define([
             }
             else {
                 var excelIndex = excelData.slice(indexInWeek + 1);
-                var tabIndex = tabData.findIndex(el => el.PERIODSTART_UTC === excelIndex[0].PERIODSTART_UTC && el.PERIODEND_UTC === excelIndex[0].PERIODEND_UTC)
+                var tabIndex = tabData.findIndex(el => getSortableQrtr(el.PERIODSTART_UTC) === getSortableQrtr(excelIndex[0].PERIODSTART_UTC)
+                 && getSortableQrtr(el.PERIODEND_UTC) === getSortableQrtr(excelIndex[0].PERIODEND_UTC))
                 var tableData1 = tabData.slice(0, tabIndex);
                 finalWeekDataConcat = tableData1.concat(excelIndex);
 
@@ -685,17 +697,23 @@ sap.ui.define([
         compareArrays: function (arr1, arr2) {
             if (arr1.length !== arr2.length) return false;
 
+            const getSortableDate = dateVal => new Date(dateVal).toISOString().split("T")[0];
+
             // Sort both arrays to ensure order doesn't affect comparison
-            const sorted1 = [...arr1].sort((a, b) => a.WEEK_STARTDATE.localeCompare(b.WEEK_STARTDATE));
-            const sorted2 = [...arr2].sort((a, b) => a.WEEK_STARTDATE.localeCompare(b.WEEK_STARTDATE));
+            const sorted1 = [...arr1].sort((a, b) =>
+                getSortableDate(a.PERIODSTART_UTC).localeCompare(getSortableDate(b.PERIODSTART_UTC))
+            );
+            const sorted2 = [...arr2].sort((a, b) =>
+                getSortableDate(a.PERIODSTART_UTC).localeCompare(getSortableDate(b.PERIODSTART_UTC))
+            );
 
             for (let i = 0; i < sorted1.length; i++) {
                 const a = sorted1[i];
                 const b = sorted2[i];
 
                 if (
-                    a.WEEK_STARTDATE !== b.WEEK_STARTDATE ||
-                    a.WEEK_ENDDATE !== b.WEEK_ENDDATE ||
+                    getSortableDate(a.PERIODSTART_UTC) !== getSortableDate(b.PERIODSTART_UTC) ||
+                    getSortableDate(a.PERIODEND_UTC) !== getSortableDate(b.PERIODEND_UTC) ||
                     a.PERIODDESC !== b.PERIODDESC
                 ) {
                     return false;
