@@ -269,8 +269,8 @@ sap.ui.define([
                         // Fix sequence
                         for (let i = 1; i < finalMergdeData.length; i++) {
                             let prev = Number(finalMergdeData[i - 1].PERIODID);
-                            if(Number.isNaN(prev)){
-                                finalMergdeData[i - 1].PERIODID=0;
+                            if (Number.isNaN(prev)) {
+                                finalMergdeData[i - 1].PERIODID = 0;
                                 prev = 0;
                             }
                             let curr = Number(finalMergdeData[i].PERIODID);
@@ -443,6 +443,7 @@ sap.ui.define([
             var sFileName = "VCP Calender Template";
             var aCols = []
             if (aDown.length) {
+                var downloadableData = this.getDownloadData(aDown, that.teleData);
                 const keys = Object.keys(aDown[0]);
                 const allowedKeys = ['LEVEL', 'PERIODSTART', 'PERIODEND', 'PERIODDESC', 'WEEKWEIGHT', 'MONTHWEIGHT'];
                 keys
@@ -458,7 +459,7 @@ sap.ui.define([
                     workbook: {
                         columns: aCols
                     },
-                    dataSource: [],
+                    dataSource: downloadableData,
                     fileName: sFileName,
                     worker: false
                 };
@@ -540,8 +541,8 @@ sap.ui.define([
             }
             else {
                 var excelIndex = excelData.slice(indexInWeek + 1);
-                var tabIndex = tabData.findIndex(el => getSortableDate(el.PERIODSTART_UTC) === getSortableDate(excelIndex[0].PERIODSTART_UTC) 
-                && getSortableDate(el.PERIODEND_UTC) === getSortableDate(excelIndex[0].PERIODEND_UTC))
+                var tabIndex = tabData.findIndex(el => getSortableDate(el.PERIODSTART_UTC) === getSortableDate(excelIndex[0].PERIODSTART_UTC)
+                    && getSortableDate(el.PERIODEND_UTC) === getSortableDate(excelIndex[0].PERIODEND_UTC))
                 var tableData1 = tabData.slice(0, tabIndex + 1);
                 finalWeekDataConcat = tableData1.concat(excelIndex);
 
@@ -582,7 +583,7 @@ sap.ui.define([
             else {
                 var excelIndex = excelData.slice(indexInWeek + 1);
                 var tabIndex = tabData.findIndex(el => getSortableMonth(el.PERIODSTART_UTC) === getSortableMonth(excelIndex[0].PERIODSTART_UTC)
-                 && getSortableMonth(el.PERIODEND_UTC) === getSortableMonth(excelIndex[0].PERIODEND_UTC))
+                    && getSortableMonth(el.PERIODEND_UTC) === getSortableMonth(excelIndex[0].PERIODEND_UTC))
                 var tableData1 = tabData.slice(0, tabIndex);
                 finalWeekDataConcat = tableData1.concat(excelIndex);
 
@@ -623,7 +624,7 @@ sap.ui.define([
             else {
                 var excelIndex = excelData.slice(indexInWeek + 1);
                 var tabIndex = tabData.findIndex(el => getSortableQrtr(el.PERIODSTART_UTC) === getSortableQrtr(excelIndex[0].PERIODSTART_UTC)
-                 && getSortableQrtr(el.PERIODEND_UTC) === getSortableQrtr(excelIndex[0].PERIODEND_UTC))
+                    && getSortableQrtr(el.PERIODEND_UTC) === getSortableQrtr(excelIndex[0].PERIODEND_UTC))
                 var tableData1 = tabData.slice(0, tabIndex);
                 finalWeekDataConcat = tableData1.concat(excelIndex);
 
@@ -753,6 +754,58 @@ sap.ui.define([
                 }
             }
             return true;
+        },
+        getDownloadData: function (data, date) {
+            // var weekData = data.filter(el=>el.LEVEL === "W");
+            // var monthData = data.filter(el=>el.LEVEL === "M");
+            // var quarterData = data.filter(el=>el.LEVEL === "Q");
+            // const getSortableMonth = dateVal => new Date(dateVal).toISOString().split("T")[0];
+            // var weekIndex = weekData.findIndex(el=>getSortableMonth(el.PERIODSTART_UTC)<=getSortableMonth(date) &&
+            // getSortableMonth(el.PERIODEND_UTC)>=getSortableMonth(date) );
+            // var finalDownWeekData = weekData.slice(weekIndex);
+            // var monthIndex = monthData.findIndex(el=>getSortableMonth(el.PERIODSTART_UTC)<=getSortableMonth(date) &&
+            // getSortableMonth(el.PERIODEND_UTC)>=getSortableMonth(date) );
+            // var finalDownmonthData = monthData.slice(monthIndex);
+            // var qtrIndex = quarterData.findIndex(el=>getSortableMonth(el.PERIODSTART_UTC)<=getSortableMonth(date) &&
+            // getSortableMonth(el.PERIODEND_UTC)>=getSortableMonth(date) );
+            // var finalDownqtrData = quarterData.slice(qtrIndex);
+
+            // var finalMergdeData = [...finalDownWeekData,...finalDownmonthData,...finalDownqtrData];
+            // var lgTime = new Date().getTimezoneOffset();
+            // finalMergdeData.forEach(el => {
+            //     var start = new Date(el.PERIODSTART);
+            //     var end = new Date(el.PERIODEND);
+            //     el.PERIODSTART = getSortableMonth(start);
+            //     el.PERIODEND = getSortableMonth(end);
+            // });
+            // return finalMergdeData;
+            const getSortableDate = dateVal => new Date(dateVal).toISOString().split("T")[0];
+            const inputDate = getSortableDate(date);
+
+            const getFilteredData = (level) => {
+                const filtered = data.filter(el => el.LEVEL === level);
+                const index = filtered.findIndex(el =>
+                    getSortableDate(el.PERIODSTART_UTC) <= inputDate &&
+                    getSortableDate(el.PERIODEND_UTC) >= inputDate
+                );
+                return filtered.slice(index);
+            };
+
+            const formatPeriodDates = (records) => {
+                return records.map(el => ({
+                    ...el,
+                    PERIODSTART: getSortableDate(el.PERIODSTART),
+                    PERIODEND: getSortableDate(el.PERIODEND)
+                }));
+            };
+
+            const mergedData = [
+                ...getFilteredData("W"),
+                ...getFilteredData("M"),
+                ...getFilteredData("Q")
+            ];
+
+            return formatPeriodDates(mergedData);
         }
     });
 });
