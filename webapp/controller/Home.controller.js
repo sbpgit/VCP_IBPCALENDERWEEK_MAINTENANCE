@@ -508,7 +508,18 @@ sap.ui.define([
         },
 
         finalWeekData: function (tabData, excelData, date) {
-            var finalWeekDataConcat = []
+            var finalWeekDataConcat = [];
+            //check for continuation of uploadata
+            var lastTabData = tabData.at(-1);
+            const prevEnd = new Date(lastTabData.PERIODEND);
+            const currStart = new Date(excelData[0].PERIODSTART);
+            // Add 1 day to previous end
+            prevEnd.setDate(prevEnd.getDate() + 1);
+            prevEnd.setHours(0, 0, 0, 0); // normalize to 00:00    
+            if (currStart.getTime() === prevEnd.getTime()) {
+                finalWeekDataConcat = tabData.concat(excelData);
+                return finalWeekDataConcat;
+            }
             const getSortableDate = dateVal => new Date(dateVal).toISOString().split("T")[0];
             const indexInWeek = excelData.findIndex(el =>
                 getSortableDate(el.PERIODSTART_UTC) <= getSortableDate(date) &&
@@ -540,6 +551,17 @@ sap.ui.define([
         },
         finalMonthData: function (tabData, excelData, date) {
             var finalWeekDataConcat = [];
+            //check for continuation of uploadata
+            var lastTabData = tabData.at(-1);
+            const prevEnd = new Date(lastTabData.PERIODEND);
+            const currStart = new Date(excelData[0].PERIODSTART);
+            // Add 1 day to previous end
+            prevEnd.setDate(prevEnd.getDate() + 1);
+            prevEnd.setHours(0, 0, 0, 0); // normalize to 00:00    
+            if (currStart.getTime() === prevEnd.getTime()) {
+                finalWeekDataConcat = tabData.concat(excelData);
+                return finalWeekDataConcat;
+            }
             const getSortableMonth = dateVal => new Date(dateVal).toISOString().split("T")[0];
             const indexInWeek = excelData.findIndex(el =>
                 getSortableMonth(el.PERIODSTART_UTC) <= getSortableMonth(date) &&
@@ -570,6 +592,17 @@ sap.ui.define([
         },
         finalQuarterData: function (tabData, excelData, date) {
             var finalWeekDataConcat = [];
+            //check for continuation of uploadata
+            var lastTabData = tabData.at(-1);
+            const prevEnd = new Date(lastTabData.PERIODEND);
+            const currStart = new Date(excelData[0].PERIODSTART);
+            // Add 1 day to previous end
+            prevEnd.setDate(prevEnd.getDate() + 1);
+            prevEnd.setHours(0, 0, 0, 0); // normalize to 00:00    
+            if (currStart.getTime() === prevEnd.getTime()) {
+                finalWeekDataConcat = tabData.concat(excelData);
+                return finalWeekDataConcat;
+            }
             const getSortableQrtr = dateVal => new Date(dateVal).toISOString().split("T")[0];
             const indexInWeek = excelData.findIndex(el =>
                 getSortableQrtr(el.PERIODSTART_UTC) <= getSortableQrtr(date) &&
