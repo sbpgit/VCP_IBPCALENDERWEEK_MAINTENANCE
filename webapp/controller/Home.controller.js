@@ -44,9 +44,9 @@ sap.ui.define([
             sap.ui.core.BusyIndicator.show();
             that.ibpCalenderWeek = [], that.Flag = '';
             var oFilters = [];
-            oFilters.push(new Filter("LEVEL", FilterOperator.NE, null))
+            // oFilters.push(new Filter("LEVEL", FilterOperator.NE, null))
             this.getOwnerComponent().getModel("oModel").read("/getIBPCalenderWeek", {
-                filters: [oFilters],
+                // filters: [oFilters],
                 success: function (oData) {
                     if (oData.results.length > 0) {
                         var lgTime = new Date().getTimezoneOffset();
@@ -65,7 +65,7 @@ sap.ui.define([
                             el.PERIODEND_UTC = new Date(el.PERIODEND);
                             that.descArray.push(el.PERIODDESC);
                         });
-                        that.ibpCalenderWeek = oData.results;
+                        that.ibpCalenderWeek = oData.results.sort((a, b) => parseInt(a.PERIODID) - parseInt(b.PERIODID));
                         var newModel = new JSONModel();
                         newModel.setData({ results: oData.results });
                         that.byId("idTab").setModel(newModel);
@@ -244,22 +244,21 @@ sap.ui.define([
                     const lastFinalWeek = weekExcelData.at(-1);
                     const lastMonth = monthExcelData.at(-1);
                     const lastQuarter = quarterExcelData.at(-1);
-
+                    const getSortableDate = dateVal => new Date(dateVal).toISOString().split("T")[0];
                     // Compare last month with last week
-                    const isMonthMatchingWeek = new Date(lastMonth.PERIODEND_UTC).getTime() === new Date(lastFinalWeek.PERIODEND_UTC).getTime();
+                    const isMonthMatchingWeek = getSortableDate(new Date(lastFinalWeek.PERIODEND_UTC)) === getSortableDate(new Date(lastQuarter.PERIODEND_UTC));
                     if (!isMonthMatchingWeek) {
                         sap.ui.core.BusyIndicator.hide();
-                        return sap.m.MessageToast.show("Monthly data is incorrect. Doesn't match with Weekly Data");
+                        return sap.m.MessageToast.show("Quarter end doesn't match with weekly data");
                     }
 
                     // Compare last month with quarter range
                     const isMonthInQuarter =
-                        new Date(lastMonth.PERIODSTART_UTC) >= new Date(lastQuarter.PERIODSTART_UTC) &&
-                        new Date(lastMonth.PERIODEND_UTC) <= new Date(lastQuarter.PERIODEND_UTC);
+                    getSortableDate(new Date(lastMonth.PERIODEND_UTC)) === getSortableDate(new Date(lastQuarter.PERIODEND_UTC));
 
                     if (!isMonthInQuarter) {
                         sap.ui.core.BusyIndicator.hide();
-                        return sap.m.MessageToast.show("Quarter data is incorrect. Doesn't match with Monthly Data");
+                        return sap.m.MessageToast.show("Quarter end doesn't match with monthly data");
                     }
 
                     //Function for Weekly data upload
@@ -276,6 +275,7 @@ sap.ui.define([
                         return sap.m.MessageToast.show("Continuous data not available. Please re-uplaod correct data")
                     }
                     else {
+
                         var finalMergdeData = [...finalWeekData, ...finalMonthData, ...finalQuarterData];
                         finalMergdeData.forEach(obj => obj.PERIODID = Number(obj.PERIODID));
                         // Fix sequence
@@ -390,9 +390,19 @@ sap.ui.define([
                 else {
                     var monthWeight = parseInt(el.getCells()[7].getText());
                 }
+                var text = el.getCells()[1].getText().replace(/\s+/g, "")
+                if(text==='Week'){
+                    var level = 'W';
+                }
+                else if(text==='Month'){
+                    var level = 'M';
+                }
+                else if(text==='Quarter'){
+                    var level = 'Q';
+                }
                 final.TPLEVEL = parseInt(el.getCells()[0].getText()),
                     final.PERIODID = el.getCells()[2].getText(),
-                    final.LEVEL = el.getCells()[1].getText().replace(/(\S)\s+/g, "$1"),
+                    final.LEVEL = level,
                     final.PERIODSTART = that.formattedDateStart(el.getCells()[3].getText(), ''),
                     final.PERIODEND = that.formattedDateStart(el.getCells()[4].getText(), 'X'),
                     final.PERIODDESC = el.getCells()[5].getValue(),
@@ -675,23 +685,23 @@ sap.ui.define([
             const lastFinalWeek = weekExcelData.at(-1);
             const lastMonth = monthExcelData.at(-1);
             const lastQuarter = quarterExcelData.at(-1);
-
+            const getSortableDate = dateVal => new Date(dateVal).toISOString().split("T")[0];
             // Compare last month with last week
-            const isMonthMatchingWeek = new Date(lastMonth.PERIODEND_UTC).getTime() === new Date(lastFinalWeek.PERIODEND_UTC).getTime();
+            const isMonthMatchingWeek = getSortableDate(new Date(lastFinalWeek.PERIODEND_UTC)) === getSortableDate(new Date(lastQuarter.PERIODEND_UTC));
             if (!isMonthMatchingWeek) {
                 sap.ui.core.BusyIndicator.hide();
-                return sap.m.MessageToast.show("Monthly data is incorrect. Doesn't match with Weekly Data");
+                return sap.m.MessageToast.show("Quarter end doesn't match with weekly data");
             }
 
             // Compare last month with quarter range
             const isMonthInQuarter =
-                new Date(lastMonth.PERIODSTART_UTC) >= new Date(lastQuarter.PERIODSTART_UTC) &&
-                new Date(lastMonth.PERIODEND_UTC) <= new Date(lastQuarter.PERIODEND_UTC);
+            getSortableDate(new Date(lastMonth.PERIODEND_UTC)) === getSortableDate(new Date(lastQuarter.PERIODEND_UTC));
 
             if (!isMonthInQuarter) {
                 sap.ui.core.BusyIndicator.hide();
-                return sap.m.MessageToast.show("Quarter data is incorrect. Doesn't match with Monthly Data");
+                return sap.m.MessageToast.show("Quarter end doesn't match with monthly data");
             }
+
             var finalMergdeData = [...weekExcelData, ...monthExcelData, ...quarterExcelData];
             //  finalMergdeData.forEach(obj => obj.PERIODID = Number(obj.PERIODID));
             // Fix sequence
@@ -768,56 +778,59 @@ sap.ui.define([
             return true;
         },
         getDownloadData: function (data, date) {
-            // var weekData = data.filter(el=>el.LEVEL === "W");
-            // var monthData = data.filter(el=>el.LEVEL === "M");
-            // var quarterData = data.filter(el=>el.LEVEL === "Q");
-            // const getSortableMonth = dateVal => new Date(dateVal).toISOString().split("T")[0];
-            // var weekIndex = weekData.findIndex(el=>getSortableMonth(el.PERIODSTART_UTC)<=getSortableMonth(date) &&
-            // getSortableMonth(el.PERIODEND_UTC)>=getSortableMonth(date) );
-            // var finalDownWeekData = weekData.slice(weekIndex);
-            // var monthIndex = monthData.findIndex(el=>getSortableMonth(el.PERIODSTART_UTC)<=getSortableMonth(date) &&
-            // getSortableMonth(el.PERIODEND_UTC)>=getSortableMonth(date) );
-            // var finalDownmonthData = monthData.slice(monthIndex);
-            // var qtrIndex = quarterData.findIndex(el=>getSortableMonth(el.PERIODSTART_UTC)<=getSortableMonth(date) &&
-            // getSortableMonth(el.PERIODEND_UTC)>=getSortableMonth(date) );
-            // var finalDownqtrData = quarterData.slice(qtrIndex);
+            var finalMergdeData=[];
+            var weekData = data.filter(el=>el.LEVEL === "W");
+            var monthData = data.filter(el=>el.LEVEL === "M");
+            var quarterData = data.filter(el=>el.LEVEL === "Q");
+            const getSortableMonth = dateVal => new Date(dateVal).toISOString().split("T")[0];
+            
+            
+            var qtrIndex = quarterData.findIndex(el=>getSortableMonth(el.PERIODSTART_UTC)<=getSortableMonth(date) &&
+            getSortableMonth(el.PERIODEND_UTC)>=getSortableMonth(date) );
+            var finalDownqtrData = quarterData.slice(qtrIndex+1);
+            if(finalDownqtrData.length>0){
+            var monthIndex = monthData.findIndex(el=>getSortableMonth(el.PERIODEND_UTC)===getSortableMonth(finalDownqtrData[0].PERIODEND_UTC));
+            var finalDownmonthData = monthData.slice(monthIndex);
 
-            // var finalMergdeData = [...finalDownWeekData,...finalDownmonthData,...finalDownqtrData];
-            // var lgTime = new Date().getTimezoneOffset();
-            // finalMergdeData.forEach(el => {
-            //     var start = new Date(el.PERIODSTART);
-            //     var end = new Date(el.PERIODEND);
-            //     el.PERIODSTART = getSortableMonth(start);
-            //     el.PERIODEND = getSortableMonth(end);
-            // });
-            // return finalMergdeData;
-            const getSortableDate = dateVal => new Date(dateVal).toISOString().split("T")[0];
-            const inputDate = getSortableDate(date);
+            var weekIndex = weekData.findIndex(el=>getSortableMonth(el.PERIODEND_UTC)===getSortableMonth(finalDownqtrData[0].PERIODEND_UTC));
+            var finalDownWeekData = weekData.slice(weekIndex);
 
-            const getFilteredData = (level) => {
-                const filtered = data.filter(el => el.LEVEL === level);
-                const index = filtered.findIndex(el =>
-                    getSortableDate(el.PERIODSTART_UTC) <= inputDate &&
-                    getSortableDate(el.PERIODEND_UTC) >= inputDate
-                );
-                return filtered.slice(index);
-            };
+            finalMergdeData = [...finalDownWeekData,...finalDownmonthData,...finalDownqtrData];
+            finalMergdeData.forEach(el => {
+                var start = new Date(el.PERIODSTART);
+                var end = new Date(el.PERIODEND);
+                el.PERIODSTART = getSortableMonth(start);
+                el.PERIODEND = getSortableMonth(end);
+            });
+        }
+            return finalMergdeData;
+            // const getSortableDate = dateVal => new Date(dateVal).toISOString().split("T")[0];
+            // const inputDate = getSortableDate(date);
 
-            const formatPeriodDates = (records) => {
-                return records.map(el => ({
-                    ...el,
-                    PERIODSTART: getSortableDate(el.PERIODSTART),
-                    PERIODEND: getSortableDate(el.PERIODEND)
-                }));
-            };
+            // const getFilteredData = (level) => {
+            //     const filtered = data.filter(el => el.LEVEL === level);
+            //     const index = filtered.findIndex(el =>
+            //         getSortableDate(el.PERIODSTART_UTC) <= inputDate &&
+            //         getSortableDate(el.PERIODEND_UTC) >= inputDate
+            //     );
+            //     return filtered.slice(index);
+            // };
 
-            const mergedData = [
-                ...getFilteredData("W"),
-                ...getFilteredData("M"),
-                ...getFilteredData("Q")
-            ];
+            // const formatPeriodDates = (records) => {
+            //     return records.map(el => ({
+            //         ...el,
+            //         PERIODSTART: getSortableDate(el.PERIODSTART),
+            //         PERIODEND: getSortableDate(el.PERIODEND)
+            //     }));
+            // };
 
-            return formatPeriodDates(mergedData);
+            // const mergedData = [
+            //     ...getFilteredData("W"),
+            //     ...getFilteredData("M"),
+            //     ...getFilteredData("Q")
+            // ];
+
+            // return formatPeriodDates(mergedData);
         },
         onRefreshPress:function(){
             this.getOwnerComponent().getModel("oModel").read("/getTelescopicData", {

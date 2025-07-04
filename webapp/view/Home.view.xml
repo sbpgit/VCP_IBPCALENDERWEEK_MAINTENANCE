@@ -57,7 +57,7 @@ itemPress="onhandlePress" mode="None" selectionChange="onhandlePress" sticky="Co
                                                        
                                                                 <cells>
                                                                 <Text id="_IDGenText11" text="{TPLEVEL} "/>
-                                                                        <Text id="_IDGenText12" text="{LEVEL} "/>
+                                                                        <Text id="_IDGenText12" text="{path:'LEVEL',formatter:'.formatter.formatLevel'} "/>
                                                                         <Text id="_IDGenText13" text="{PERIODID}"/>
                                                                         <!-- <Text text="{PERIODSTART}"/> -->
                                                                         <Text id="_IDGenText14" text="{path:'PERIODSTART_UTC',type:'sap.ui.model.type.Date',formatOptions:{pattern:'yyyy-MM-dd',UTC:true }}" />
@@ -103,7 +103,7 @@ itemPress="onhandlePress" mode="None" selectionChange="onhandlePress" sticky="Co
                     <items>
                         <ColumnListItem id="_IDGenColumnListItem1">
                             <cells>
-                            <Text id="_IDGenText28" text="{LEVEL}"/>
+                            <Text id="_IDGenText28" text="{path:'LEVEL',formatter:'.formatter.formatLevel'}"/>
                                 <Text id="_IDGenText25" text="{path:'PERIODSTART', type:'sap.ui.model.type.Date', formatOptions:{pattern:'yyyy-MM-dd',UTC:true }}"/>
                                 <Text id="_IDGenText26" text="{path:'PERIODEND', type:'sap.ui.model.type.Date', formatOptions:{pattern:'yyyy-MM-dd',UTC:true }}"/>
                                 <Text id="_IDGenText27" text="{PERIODDESC}"/>
