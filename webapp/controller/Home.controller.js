@@ -26,6 +26,18 @@ sap.ui.define([
 
                 }
             })
+
+            this.getOwnerComponent().getModel("oModel").read("/getTelescopicData", {
+                success: function (oData) {
+                    var data = (oData.results);
+                    var telescopicModel = new sap.ui.model.json.JSONModel({ results: data });
+                    that.byId("idTelescopicTab").setModel(telescopicModel);
+                }
+            });
+            var oViewModel = new sap.ui.model.json.JSONModel({
+                showFooter: true // default to true for first tab
+            });
+            this.getView().setModel(oViewModel, "viewModel");
         },
         onAfterRendering: function () {
             that.descArray = [];
@@ -806,6 +818,20 @@ sap.ui.define([
             ];
 
             return formatPeriodDates(mergedData);
+        },
+        onRefreshPress:function(){
+            this.getOwnerComponent().getModel("oModel").read("/getTelescopicData", {
+                success: function (oData) {
+                    var data = (oData.results);
+                    var telescopicModel = new sap.ui.model.json.JSONModel({ results: data });
+                    that.byId("idTelescopicTab").setModel(telescopicModel);
+                }
+            });
+        },
+        onTabSelected:function(oEvent){
+            var sSelectedKey = oEvent.getParameter("key");
+            var bShowFooter = (sSelectedKey === "Calendar"); // show only for first tab
+            this.getView().getModel("viewModel").setProperty("/showFooter", bShowFooter);
         }
     });
 });
