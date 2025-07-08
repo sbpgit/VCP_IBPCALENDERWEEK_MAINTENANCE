@@ -19,7 +19,7 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/model/json/JSONModel", "./DateUtils
                     if (excelData.length > 0) {
                         const timezoneOffset = new Date().getTimezoneOffset();
                         const ibpCalendarData = context.ibpCalenderWeek || [];
-                        const result = context.emport(excelData, timezoneOffset, ibpCalendarData);
+                        const result = context.Emport(excelData, timezoneOffset, ibpCalendarData);
 
                         context.byId("idTab").setModel(new JSONModel({ results: result.data }));
                         context.ibpCalenderWeek = result.data;
@@ -50,7 +50,7 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/model/json/JSONModel", "./DateUtils
             reader.readAsBinaryString(file);
         },
 
-        emport(array, timezoneOffset, ibpCalendarData) {
+        emport(array, timezoneOffset, ibpCalendarData, plannedDate) {
             uploadFlag = "X";
             
             // ibpCalendarData contains existing calendar data from context.ibpCalenderWeek
@@ -62,7 +62,15 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/model/json/JSONModel", "./DateUtils
                 const transformedData = this.transformInputData(array, timezoneOffset);
                 
                 // Step 2: Merge with existing IBP calendar data
-                const mergedData = this.mergeWithIBPCalendarData(transformedData, existingData);
+                const mergedData = this.mergeWithIBPCalendarData(transformedData, existingData,plannedDate);
+                if(mergedData.length==0){
+                    return {
+                        data: [],
+                        hasDuplicates: false,
+                        isContinuous: false,
+                        message:"Planned date does not fall within any Quarter in the uploaded Excel data."
+                    };
+                }
                 
                 // Step 3: Handle duplicates and create final dataset
                 const finalData = this.handleDuplicatesAndFinalize(mergedData);
@@ -77,11 +85,12 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/model/json/JSONModel", "./DateUtils
                     validationError: validationResult.error
                 };
             } catch (error) {
-                console.error("Error in emport function:", error);
+                console.log("Error in emport function:", error);
                 return {
                     data: [],
                     hasDuplicates: false,
-                    isContinuous: false
+                    isContinuous: false,
+                    message:error
                 };
             }
         },
@@ -117,30 +126,82 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/model/json/JSONModel", "./DateUtils
             }, []);
         },
 
-        mergeWithIBPCalendarData(newData, ibpCalendarData) {
-            // If no existing IBP calendar data (first upload), return new data only
+        // mergeWithIBPCalendarData(newData, ibpCalendarData, plannedDate) {
+        //     // If no existing IBP calendar data (first upload), return new data only
+        //     if (!ibpCalendarData || ibpCalendarData.length === 0) {
+        //         return newData.map(item => ({ ...item, SOURCE: 'UPLOAD' }));
+        //     }
+
+        //     // Mark existing data for identification
+        //     const markedIBPData = ibpCalendarData.map(item => ({
+        //         ...item,
+        //         SOURCE: item.SOURCE || 'IBP'
+        //     }));
+
+        //     // Combine both datasets
+        //     const combinedData = [...markedIBPData, ...newData];
+            
+        //     // Sort by TPLEVEL and PERIODSTART for consistent ordering
+        //     return combinedData.sort((a, b) => {
+        //         if (a.TPLEVEL !== b.TPLEVEL) {
+        //             return a.TPLEVEL - b.TPLEVEL;
+        //         }
+        //         return new Date(a.PERIODSTART) - new Date(b.PERIODSTART);
+        //     });
+        // },
+
+        mergeWithIBPCalendarData(newData, ibpCalendarData, plannedDate) {
+            const result = [];
             if (!ibpCalendarData || ibpCalendarData.length === 0) {
                 return newData.map(item => ({ ...item, SOURCE: 'UPLOAD' }));
             }
-
-            // Mark existing data for identification
+        
+            // Step 1: Find the cutoff quarter from newData
+            const cutoffQuarter = newData.find(item =>
+                item.LEVEL === 'Q' &&
+                new Date(item.PERIODSTART_UTC) <= new Date(plannedDate) &&
+                new Date(item.PERIODEND_UTC) >= new Date(plannedDate)
+            );
+        
+            if (!cutoffQuarter) {
+                 
+                return result;
+            }
+        
+            const cutoffDate = new Date(cutoffQuarter.PERIODEND_UTC);
+        
+            // Step 2: Group data by level
+            const levels = ['W', 'M', 'Q'];
             const markedIBPData = ibpCalendarData.map(item => ({
                 ...item,
                 SOURCE: item.SOURCE || 'IBP'
             }));
-
-            // Combine both datasets
-            const combinedData = [...markedIBPData, ...newData];
+        
             
-            // Sort by TPLEVEL and PERIODSTART for consistent ordering
-            return combinedData.sort((a, b) => {
-                if (a.TPLEVEL !== b.TPLEVEL) {
-                    return a.TPLEVEL - b.TPLEVEL;
-                }
+        
+            for (const level of levels) {
+                const existingLevelData = markedIBPData.filter(item =>
+                    item.LEVEL === level &&
+                    new Date(item.PERIODSTART_UTC || item.PERIODSTART) <= cutoffDate
+                );
+        
+                const newLevelData = newData
+                    .filter(item =>
+                        item.LEVEL === level &&
+                        new Date(item.PERIODSTART_UTC) > cutoffDate
+                    )
+                    .map(item => ({ ...item, SOURCE: 'UPLOAD' }));
+        
+                result.push(...existingLevelData, ...newLevelData);
+            }
+        
+            // Step 3: Sort and return
+            return result.sort((a, b) => {
+                if (a.TPLEVEL !== b.TPLEVEL) return a.TPLEVEL - b.TPLEVEL;
                 return new Date(a.PERIODSTART) - new Date(b.PERIODSTART);
             });
         },
-
+        
         handleDuplicatesAndFinalize(mergedData) {
             // Group by unique period identifier
             const periodGroups = new Map();

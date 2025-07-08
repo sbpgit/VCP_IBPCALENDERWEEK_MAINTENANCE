@@ -931,11 +931,12 @@ sap.ui.define([
             ExcelUtils.importExcel(e.getParameter("files")[0], this);
         },
         Emport(excelData) {
-            const { data, hasDuplicates, isContinuous } = ExcelUtils.emport(excelData, new Date().getTimezoneOffset(),this.ibpCalenderWeek);
+
+            const { data, hasDuplicates, isContinuous,message="Periods are not continuous. Please correct and upload again." } = ExcelUtils.emport(excelData, new Date().getTimezoneOffset(),this.ibpCalenderWeek,this.teleData);
       
             if (!isContinuous) {
               sap.ui.core.BusyIndicator.hide();
-              sap.m.MessageToast.show("Periods are not continuous. Please correct and upload again.");
+              sap.m.MessageToast.show(message);
               return;
             }
       
