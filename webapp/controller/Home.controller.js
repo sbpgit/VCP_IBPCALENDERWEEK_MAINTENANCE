@@ -989,9 +989,14 @@ sap.ui.define([
             const getISO = DateUtils.getISODate;
             var date = this.teleData;
             // const filteredData = this.ibpCalenderWeek.filter(el=>getISO(el.PERIODSTART_UTC) <= getISO(date) && 
-            // getISO(el.PERIODEND_UTC) >= getISO(date));
+            // getISO(el.PERIODEND_UTC) >= getISO(date) && el.LEVEL == 'Q');
             // if(filteredData.length>0){
-            //     var downloadableData = this.ibpCalenderWeek.filter(el=> getISO(el.PERIODEND_UTC)>getISO(date));
+            //     var downloadableData = this.ibpCalenderWeek.filter(el=> getISO(el.PERIODEND_UTC)>getISO(filteredData[0].PERIODEND_UTC));
+            //      downloadableData.map(el => ({
+            //         ...el,
+            //         PERIODSTART: getISO(el.PERIODSTART),
+            //         PERIODEND: getISO(el.PERIODEND)
+            //     }));
             // }
             // else{
             //     var downloadableData=[];
