@@ -986,7 +986,15 @@ sap.ui.define([
             const sFileName = "VCP Calendar Template";
             const aCols = ExcelUtils.getExportColumns();
             const aDown = this.ibpCalenderWeek || [];
-            const downloadableData = ExcelUtils.getDownloadData(aDown, this.teleData);
+            const filteredData = this.ibpCalenderWeek.filter(el=>getISO(el.PERIODSTART_UTC) <= getISO(date) && 
+            getISO(el.PERIODEND_UTC) >= getISO(date));
+            if(filteredData.length>0){
+                var downloadableData = this.ibpCalenderWeek.filter(el=> getISO(el.PERIODEND_UTC)>getISO(date));
+            }
+            else{
+                var downloadableData=[];
+            }
+            // const downloadableData = ExcelUtils.getDownloadData(aDown, this.teleData);
 
             const oSheet = new Spreadsheet({
                 workbook: { columns: aCols },
