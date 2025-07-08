@@ -96,19 +96,10 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/model/json/JSONModel", "./DateUtils
         },
 
         transformInputData(array, timezoneOffset,plannedDate) {
-            const levelMap = { W: 3, M: 4, Q: 5 };
-            const getISO = DateUtils.getISODate;
+            const levelMap = { W: 3, M: 4, Q: 5 };            
             const uniqueMap = new Map();
             let periodIdCounter = 1;
-            var arrayItem = array.filter(el => getISO(el.PERIODSTART) <= getISO(plannedDate) && 
-            getISO(el.PERIODEND) >= getISO(plannedDate));
-            let cutoffDate = null;
-            if (arrayItem.length > 0) {
-                cutoffDate = getISO(arrayItem[0].PERIODEND_UTC);
-            }
-            array = cutoffDate
-                ? array.filter(el => getISO(el.PERIODEND_UTC) > cutoffDate)
-                : array;
+            
             return array.reduce((result, el) => {
                 // Create unique key for deduplication
                 const key = `${el.LEVEL}_${el.PERIODSTART}_${el.PERIODEND}`;
@@ -176,6 +167,15 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/model/json/JSONModel", "./DateUtils
 
             //     return result;
             // }
+            const getISO = DateUtils.getISODate;
+            var arrayItem = newData.filter(el => getISO(el.PERIODSTART) <= getISO(plannedDate) && 
+            getISO(el.PERIODEND) >= getISO(plannedDate) && el.LEVEL == "Q");
+            if (arrayItem.length > 0) {
+                cutoffDate = getISO(arrayItem[0].PERIODEND);
+            }
+            newData = cutoffDate
+                ? newData.filter(el => getISO(el.PERIODEND) > cutoffDate)
+                : newData;
 
             const cutoffDate = new Date(newData[0].PERIODEND_UTC);
 
