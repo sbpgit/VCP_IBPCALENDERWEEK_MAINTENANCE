@@ -420,7 +420,7 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/model/json/JSONModel", "./DateUtils
                 getISO(el.PERIODSTART_UTC) <= getISO(date) && 
                 getISO(el.PERIODEND_UTC) >= getISO(date)
             );
-            
+            if(qtrIndex !==-1){
             const finalDownqtrData = quarterData.slice(qtrIndex + 1);
             if (!finalDownqtrData.length) return [];
 
@@ -449,6 +449,11 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/model/json/JSONModel", "./DateUtils
                 PERIODSTART: getISO(el.PERIODSTART),
                 PERIODEND: getISO(el.PERIODEND)
             }));
+        }
+        else{           
+            const finalData=[];
+            return finalData;
+        }
         }
     };
 });
