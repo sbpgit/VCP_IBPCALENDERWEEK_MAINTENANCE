@@ -19,19 +19,19 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/model/json/JSONModel", "./DateUtils
                     if (excelData.length > 0) {
                         const timezoneOffset = new Date().getTimezoneOffset();
                         const ibpCalendarData = context.ibpCalenderWeek || [];
-                        const result = context.Emport(excelData, timezoneOffset, ibpCalendarData);
+                        context.Emport(excelData, timezoneOffset, ibpCalendarData);
 
-                        context.byId("idTab").setModel(new JSONModel({ results: result.data }));
-                        context.ibpCalenderWeek = result.data;
+                        // context.byId("idTab").setModel(new JSONModel({ results: result.data }));
+                        // context.ibpCalenderWeek = result.data;
 
-                        if (!result.isContinuous) {
-                            MessageToast.show(result.validationError || "Periods are not continuous. Please correct and upload again.");
-                            return;
-                        }
+                        // if (!result.isContinuous) {
+                        //     MessageToast.show(result.validationError || "Periods are not continuous. Please correct and upload again.");
+                        //     return;
+                        // }
                         
-                        if (result.hasDuplicates) {
-                            MessageToast.show("Duplicates found and merged successfully.");
-                        }
+                        // if (result.hasDuplicates) {
+                        //     MessageToast.show("Duplicates found and merged successfully.");
+                        // }
                     } else {
                         sap.ui.core.BusyIndicator.hide();
                         if (uploadFlag !== "X") {
@@ -82,7 +82,7 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/model/json/JSONModel", "./DateUtils
                     data: finalData.data,
                     hasDuplicates: finalData.hasDuplicates,
                     isContinuous: validationResult.isContinuous,
-                    validationError: validationResult.error
+                    message: validationResult.message
                 };
             } catch (error) {
                 console.log("Error in emport function:", error);
@@ -320,7 +320,7 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/model/json/JSONModel", "./DateUtils
                         const levelName = level === 'W' ? 'week' : level === 'M' ? 'month' : 'quarter';
                         return {
                             isContinuous: false,
-                            error: `Discontinuity in ${levelName} dates. Please re-upload correct file`
+                            message: `Discontinuity in ${levelName} dates. Please re-upload correct file`
                         };
                     }
                 }
@@ -346,7 +346,7 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/model/json/JSONModel", "./DateUtils
                 if (weekStartDate !== quarterStartDate || monthStartDate !== quarterStartDate) {
                     return {
                         isContinuous: false,
-                        error: "PERIODSTART dates doesn't match"
+                        message: "PERIODSTART dates doesn't match"
                     };
                 }
                 
@@ -359,7 +359,7 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/model/json/JSONModel", "./DateUtils
                 if (weekEndDate !== quarterEndDate) {
                     return {
                         isContinuous: false,
-                        error: "Quarter end doesn't match with weekly data"
+                        message: "Quarter end doesn't match with weekly data"
                     };
                 }
                 
@@ -367,14 +367,14 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/model/json/JSONModel", "./DateUtils
                 if (monthEndDate !== quarterEndDate) {
                     return {
                         isContinuous: false,
-                        error: "Quarter end doesn't match with monthly data"
+                        message: "Quarter end doesn't match with monthly data"
                     };
                 }
             }
 
             return {
                 isContinuous: true,
-                error: null
+                message: null
             };
         },
 
