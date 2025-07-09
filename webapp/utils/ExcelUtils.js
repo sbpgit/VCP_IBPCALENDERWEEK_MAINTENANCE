@@ -9,8 +9,8 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/model/json/JSONModel", "./DateUtils
                 return MessageToast.show("Please upload only files of type XLSX or CSV");
             }
 
-            uploadFlag = "X";
             const reader = new FileReader();
+            const self = this;
             reader.onload = function (e) {
                 const data = e.target.result;
                 const workbook = XLSX.read(data, { type: 'binary' });
@@ -19,8 +19,19 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/model/json/JSONModel", "./DateUtils
                     if (excelData.length > 0) {
                         const timezoneOffset = new Date().getTimezoneOffset();
                         const ibpCalendarData = context.ibpCalenderWeek || [];
+                        if(ibpCalendarData.length>0){
+                            var sameData = self.compareArrays(ibpCalendarData, excelData);
+                    if (sameData) {
+                        sap.ui.core.BusyIndicator.hide();
+                        return sap.m.MessageToast.show("Same file uploaded");
+                    }
+                        }
+                        if(uploadFlag !=="X"){
                         context.Emport(excelData, timezoneOffset, ibpCalendarData);
-
+                        }
+                        else{
+                            uploadFlag =" ";
+                        }
                         // context.byId("idTab").setModel(new JSONModel({ results: result.data }));
                         // context.ibpCalenderWeek = result.data;
 
@@ -487,6 +498,33 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/model/json/JSONModel", "./DateUtils
             const daysToAdd = day === 0 ? 7 : 7 - day;
             date.setDate(date.getDate() + daysToAdd);
             return date;
-        }
+        },
+        compareArrays: function (arr1, arr2) {
+                        if (arr1.length !== arr2.length) return false;
+            
+                        const getSortableDate = dateVal => new Date(dateVal).toISOString().split("T")[0];
+            
+                        // Sort both arrays to ensure order doesn't affect comparison
+                        const sorted1 = [...arr1].sort((a, b) =>
+                            getSortableDate(a.PERIODSTART_UTC).localeCompare(getSortableDate(b.PERIODSTART_UTC))
+                        );
+                        const sorted2 = [...arr2].sort((a, b) =>
+                            getSortableDate(a.PERIODSTART_UTC).localeCompare(getSortableDate(b.PERIODSTART_UTC))
+                        );
+            
+                        for (let i = 0; i < sorted1.length; i++) {
+                            const a = sorted1[i];
+                            const b = sorted2[i];
+            
+                            if (
+                                getSortableDate(a.PERIODSTART_UTC) !== getSortableDate(b.PERIODSTART_UTC) ||
+                                getSortableDate(a.PERIODEND_UTC) !== getSortableDate(b.PERIODEND_UTC) ||
+                                a.PERIODDESC !== b.PERIODDESC
+                            ) {
+                                return false;
+                            }
+                        }
+                        return true;
+                    },
     };
 });
