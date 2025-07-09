@@ -783,8 +783,8 @@
 //             var monthData = data.filter(el=>el.LEVEL === "M");
 //             var quarterData = data.filter(el=>el.LEVEL === "Q");
 //             const getSortableMonth = dateVal => new Date(dateVal).toISOString().split("T")[0];
-            
-            
+
+
 //             var qtrIndex = quarterData.findIndex(el=>getSortableMonth(el.PERIODSTART_UTC)<=getSortableMonth(date) &&
 //             getSortableMonth(el.PERIODEND_UTC)>=getSortableMonth(date) );
 //             var finalDownqtrData = quarterData.slice(qtrIndex+1);
@@ -911,6 +911,17 @@ sap.ui.define([
                         el.TempID = parseInt(el.PERIODID);
                         el.PERIODSTART_UTC = new Date(el.PERIODSTART);
                         el.PERIODEND_UTC = new Date(el.PERIODEND);
+                        const nextMondayStart = ExcelUtils.getNextMonday(el.PERIODSTART);
+                        el.WEEK_START = nextMondayStart.toISOString().split("T")[0];
+                    
+                        // WEEK_END depends on LEVEL
+                        if (el.LEVEL === "W") {
+                            const sunday = ExcelUtils.addDays(nextMondayStart, 6);
+                            el.WEEK_END = sunday.toISOString().split("T")[0];
+                        } else if (el.LEVEL === "M" || el.LEVEL === "Q") {
+                            const nextMondayEnd = ExcelUtils.getNextMonday(el.PERIODEND);
+                            el.WEEK_END = nextMondayEnd.toISOString().split("T")[0];
+                        }
                         this.descArray.push(el.PERIODDESC);
                         return el;
                     });
@@ -932,18 +943,18 @@ sap.ui.define([
         },
         Emport(excelData) {
 
-            const { data, hasDuplicates, isContinuous,message="Periods are not continuous. Please correct and upload again." } = ExcelUtils.emport(excelData, new Date().getTimezoneOffset(),this.ibpCalenderWeek,this.teleData);
-      
+            const { data, hasDuplicates, isContinuous, message = "Periods are not continuous. Please correct and upload again." } = ExcelUtils.emport(excelData, new Date().getTimezoneOffset(), this.ibpCalenderWeek, this.teleData);
+
             if (!isContinuous) {
-              sap.ui.core.BusyIndicator.hide();
-              sap.m.MessageToast.show(message);
-              return;
+                sap.ui.core.BusyIndicator.hide();
+                sap.m.MessageToast.show(message);
+                return;
             }
-      
+
             this.byId("idTab").setModel(new JSONModel({ results: data }));
             this.ibpCalenderWeek = data;
             sap.ui.core.BusyIndicator.hide();
-          },
+        },
         onSavePress() {
             sap.ui.core.BusyIndicator.show();
             const tableData = this.byId("idTab").getItems();

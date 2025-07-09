@@ -69,9 +69,10 @@ itemPress="onhandlePress" mode="None" selectionChange="onhandlePress" sticky="Co
                                                                         <Text id="_IDGenText16" text="{WEEKWEIGHT}"/>
                                                                          <Text id="_IDGenText17" text="{MONTHWEIGHT}"/>
                                                                         <!-- <Text text="{PERIODSTART_UTC}"/> -->
-                                                                        <Text id="_IDGenText18" text="{path:'PERIODSTART_UTC', type:'sap.ui.model.type.Date', formatOptions: {pattern:'yyyy-MM-dd'}}"/>
-                                                                        <!-- <Text text="{PERIODEND_UTC}"/> -->
-                                                                        <Text id="_IDGenText19" text="{path:'PERIODEND_UTC', type:'sap.ui.model.type.Date', formatOptions: {pattern:'yyyy-MM-dd'}}"/>
+<!--                                                                         <Text id="_IDGenText18" text="{path:'WEEK_START', type:'sap.ui.model.type.Date', formatOptions: {pattern:'yyyy-MM-dd'}}"/> -->
+                                                                        <Text text="{WEEK_START}"/>
+                                                                        <Text text="{WEEK_END}"/>
+<!--                                                                         <Text id="_IDGenText19" text="{path:'WEEK_END', type:'sap.ui.model.type.Date', formatOptions: {pattern:'yyyy-MM-dd'}}"/> -->
                                                                         <Text id="_IDGenText20" text="{TempID}"/>
                                                                         
                                                                 </cells>

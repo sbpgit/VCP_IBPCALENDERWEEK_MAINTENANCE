@@ -95,11 +95,11 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/model/json/JSONModel", "./DateUtils
             }
         },
 
-        transformInputData(array, timezoneOffset,plannedDate) {
-            const levelMap = { W: 3, M: 4, Q: 5 };            
+        transformInputData(array, timezoneOffset, plannedDate) {
+            const levelMap = { W: 3, M: 4, Q: 5 };
             const uniqueMap = new Map();
             let periodIdCounter = 1;
-            
+
             return array.reduce((result, el) => {
                 // Create unique key for deduplication
                 const key = `${el.LEVEL}_${el.PERIODSTART}_${el.PERIODEND}`;
@@ -109,6 +109,18 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/model/json/JSONModel", "./DateUtils
 
                     const start = new Date(el.PERIODSTART);
                     const end = new Date(el.PERIODEND);
+
+                    const nextMondayStart = this.getNextMonday(new Date(start.getTime()-timezoneOffset * 60 * 1000));
+                    el.WEEK_START = nextMondayStart.toISOString().split("T")[0];
+                    // WEEK_END depends on LEVEL
+                    if (el.LEVEL === "W") {
+                        const sunday = this.addDays(nextMondayStart, 6);
+                        el.WEEK_END = sunday.toISOString().split("T")[0];
+                    } else if (el.LEVEL === "M" || el.LEVEL === "Q") {
+                        const adjustedEnd = new Date(end.getTime() - timezoneOffset * 60 * 1000);
+                        const nextSundayEnd = this.getNextSunday(adjustedEnd);
+                        el.WEEK_END = nextSundayEnd.toISOString().split("T")[0];
+                    }
 
                     result.push({
                         ...el,
@@ -156,37 +168,30 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/model/json/JSONModel", "./DateUtils
                 return newData.map(item => ({ ...item, SOURCE: 'UPLOAD' }));
             }
 
-            // Step 1: Find the cutoff quarter from newData
-            // const cutoffQuarter = newData.find(item =>
-            //     item.LEVEL === 'Q' &&
-            //     new Date(item.PERIODSTART_UTC) <= new Date(plannedDate) &&
-            //     new Date(item.PERIODEND_UTC) >= new Date(plannedDate)
-            // );
-
-            // if (!cutoffQuarter) {
-
-            //     return result;
-            // }
             const getISO = DateUtils.getISODate;
-            var arrayItem = newData.filter(el => getISO(el.PERIODSTART) <= getISO(plannedDate) && 
-            getISO(el.PERIODEND) >= getISO(plannedDate) && el.LEVEL == "Q");
+
+            // Step 1: Identify cutoff date from quarterly level
+            let cutoffDate;
+            const arrayItem = newData.filter(el =>
+                getISO(el.PERIODSTART) <= getISO(plannedDate) &&
+                getISO(el.PERIODEND) >= getISO(plannedDate) &&
+                el.LEVEL === "Q"
+            );
+
             if (arrayItem.length > 0) {
-                cutoffDate = getISO(arrayItem[0].PERIODEND);
+                cutoffDate = new Date(arrayItem[0].PERIODEND); // Use Date directly, not getISO
+                newData = newData.filter(el => new Date(el.PERIODEND) > cutoffDate);
+            } else {
+                // No Q-level cutoff found, use first PERIODEND_UTC as fallback
+                cutoffDate = new Date(newData[0].PERIODEND_UTC);
             }
-            newData = cutoffDate
-                ? newData.filter(el => getISO(el.PERIODEND) > cutoffDate)
-                : newData;
 
-            const cutoffDate = new Date(newData[0].PERIODEND_UTC);
-
-            // Step 2: Group data by level
+            // Step 2: Group by LEVEL
             const levels = ['W', 'M', 'Q'];
             const markedIBPData = ibpCalendarData.map(item => ({
                 ...item,
                 SOURCE: item.SOURCE || 'IBP'
             }));
-
-
 
             for (const level of levels) {
                 const existingLevelData = markedIBPData.filter(item =>
@@ -204,7 +209,7 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/model/json/JSONModel", "./DateUtils
                 result.push(...existingLevelData, ...newLevelData);
             }
 
-            // Step 3: Sort and return
+            // Step 3: Sort by TPLEVEL, then PERIODSTART
             return result.sort((a, b) => {
                 if (a.TPLEVEL !== b.TPLEVEL) return a.TPLEVEL - b.TPLEVEL;
                 return new Date(a.PERIODSTART) - new Date(b.PERIODSTART);
@@ -464,6 +469,24 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/model/json/JSONModel", "./DateUtils
                 const finalData = [];
                 return finalData;
             }
+        },
+        getNextMonday: function (date) {
+            const d = new Date(date);
+            const day = d.getDay();
+            const diff = day === 1 ? 7 : (8 - day) % 7;
+            d.setDate(d.getDate() + diff);
+            return d;
+        },
+        addDays: function (date, days) {
+            const result = new Date(date);
+            result.setDate(result.getDate() + days);
+            return result;
+        },
+        getNextSunday: function(date) {
+            const day = date.getDay(); // 0 = Sunday, 6 = Saturday
+            const daysToAdd = day === 0 ? 7 : 7 - day;
+            date.setDate(date.getDate() + daysToAdd);
+            return date;
         }
     };
 });
