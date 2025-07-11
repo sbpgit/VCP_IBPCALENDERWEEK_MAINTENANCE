@@ -29,6 +29,11 @@ sap.ui.define([], () => {
 
         getISODate(dateVal) {
             return new Date(dateVal).toISOString().split("T")[0];
+        },
+        getExcelDate(dateValue) {
+            const [month, day, year] = dateValue.split('/');
+            const formatted = `20${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+            return formatted;
         }
     };
 });

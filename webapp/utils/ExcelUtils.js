@@ -10,7 +10,7 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/model/json/JSONModel", "./DateUtils
             }
 
             const reader = new FileReader();
-            const self = this;
+
             reader.onload = function (e) {
                 const data = e.target.result;
                 const workbook = XLSX.read(data, { type: 'binary' });
@@ -19,19 +19,13 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/model/json/JSONModel", "./DateUtils
                     if (excelData.length > 0) {
                         const timezoneOffset = new Date().getTimezoneOffset();
                         const ibpCalendarData = context.ibpCalenderWeek || [];
-                        if(ibpCalendarData.length>0){
-                            var sameData = self.compareArrays(ibpCalendarData, excelData);
-                    if (sameData) {
-                        sap.ui.core.BusyIndicator.hide();
-                        return sap.m.MessageToast.show("Same file uploaded");
-                    }
-                        }
-                        if(uploadFlag !=="X"){
-                        context.Emport(excelData, timezoneOffset, ibpCalendarData);
-                        }
-                        else{
-                            uploadFlag =" ";
-                        }
+
+                        // if (uploadFlag !== "X") {
+                            context.Emport(excelData, timezoneOffset, ibpCalendarData);
+                        // }
+                        // else {
+                        //     uploadFlag = " ";
+                        // }
                         // context.byId("idTab").setModel(new JSONModel({ results: result.data }));
                         // context.ibpCalenderWeek = result.data;
 
@@ -67,11 +61,17 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/model/json/JSONModel", "./DateUtils
             // ibpCalendarData contains existing calendar data from context.ibpCalenderWeek
             // It's only empty on the very first upload, otherwise contains existing periods
             const existingData = ibpCalendarData || [];
-
+            const self = this;
             try {
                 // Step 1: Transform and deduplicate input data
                 const transformedData = this.transformInputData(array, timezoneOffset, plannedDate);
-
+                if (existingData.length > 0) {
+                    var sameData = self.compareArrays(existingData, transformedData);
+                    if (sameData) {
+                        sap.ui.core.BusyIndicator.hide();
+                        return sap.m.MessageToast.show("Same file uploaded");
+                    }
+                }
                 // Step 2: Merge with existing IBP calendar data
                 const mergedData = this.mergeWithIBPCalendarData(transformedData, existingData, plannedDate);
                 if (mergedData.length == 0) {
@@ -79,7 +79,7 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/model/json/JSONModel", "./DateUtils
                         data: [],
                         hasDuplicates: false,
                         isContinuous: false,
-                        message: "Planned date does not fall within any Quarter in the uploaded Excel data."
+                        message: mergedData.message
                     };
                 }
 
@@ -121,7 +121,7 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/model/json/JSONModel", "./DateUtils
                     const start = new Date(el.PERIODSTART);
                     const end = new Date(el.PERIODEND);
 
-                    const nextMondayStart = this.getNextMonday(new Date(start.getTime()-timezoneOffset * 60 * 1000));
+                    const nextMondayStart = this.getNextMonday(new Date(start.getTime() - timezoneOffset * 60 * 1000));
                     el.WEEK_START = nextMondayStart.toISOString().split("T")[0];
                     // WEEK_END depends on LEVEL
                     if (el.LEVEL === "W") {
@@ -144,81 +144,137 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/model/json/JSONModel", "./DateUtils
                         SOURCE: 'UPLOAD' // Mark as uploaded data
                     });
                 }
-
+                
                 return result;
             }, []);
         },
 
-        // mergeWithIBPCalendarData(newData, ibpCalendarData, plannedDate) {
-        //     // If no existing IBP calendar data (first upload), return new data only
-        //     if (!ibpCalendarData || ibpCalendarData.length === 0) {
-        //         return newData.map(item => ({ ...item, SOURCE: 'UPLOAD' }));
-        //     }
-
-        //     // Mark existing data for identification
-        //     const markedIBPData = ibpCalendarData.map(item => ({
-        //         ...item,
-        //         SOURCE: item.SOURCE || 'IBP'
-        //     }));
-
-        //     // Combine both datasets
-        //     const combinedData = [...markedIBPData, ...newData];
-
-        //     // Sort by TPLEVEL and PERIODSTART for consistent ordering
-        //     return combinedData.sort((a, b) => {
-        //         if (a.TPLEVEL !== b.TPLEVEL) {
-        //             return a.TPLEVEL - b.TPLEVEL;
-        //         }
-        //         return new Date(a.PERIODSTART) - new Date(b.PERIODSTART);
-        //     });
-        // },
 
         mergeWithIBPCalendarData(newData, ibpCalendarData, plannedDate) {
             const result = [];
+            newData.sort((a, b) => a.TPLEVEL - b.TPLEVEL || new Date(a.PERIODSTART) - new Date(b.PERIODSTART));
             if (!ibpCalendarData || ibpCalendarData.length === 0) {
                 return newData.map(item => ({ ...item, SOURCE: 'UPLOAD' }));
             }
 
             const getISO = DateUtils.getISODate;
-
+            const getExcelDate = DateUtils.getExcelDate;
             // Step 1: Identify cutoff date from quarterly level
             let cutoffDate;
-            const arrayItem = newData.filter(el =>
+            const arrayItemExcel = newData.filter(el =>
+                getExcelDate(el.PERIODSTART) <= getISO(plannedDate) &&
+                getExcelDate(el.PERIODEND) >= getISO(plannedDate) &&
+                el.LEVEL === "Q"
+            );
+            const arrayItemCalendar = ibpCalendarData.filter(el =>
                 getISO(el.PERIODSTART) <= getISO(plannedDate) &&
                 getISO(el.PERIODEND) >= getISO(plannedDate) &&
                 el.LEVEL === "Q"
             );
-
-            if (arrayItem.length > 0) {
-                cutoffDate = new Date(arrayItem[0].PERIODEND); // Use Date directly, not getISO
+            //case 1 : If planning data exists in both files
+            if (arrayItemExcel.length > 0 && arrayItemCalendar.length > 0) {
+                cutoffDate = new Date(arrayItemExcel[0].PERIODEND); // Use Date directly, not getISO
                 newData = newData.filter(el => new Date(el.PERIODEND) > cutoffDate);
-            } else {
-                // No Q-level cutoff found, use first PERIODEND_UTC as fallback
-                cutoffDate = new Date(newData[0].PERIODEND_UTC);
+                ibpCalendarData = ibpCalendarData.filter(el => new Date(el.PERIODEND) <= cutoffDate);
+            }
+            //case 2: Planning data exists only in Excel file & not in calendar data
+            else if (arrayItemExcel.length > 0 && arrayItemCalendar.length == 0) {
+                const startExcelDate = newData[0];
+                const finalCalendarDate = ibpCalendarData.at(-1);
+                const findIndex = newData.findIndex(el => new Date(el.PERIODEND) == new Date(finalCalendarDate.PERIODEND));
+                if (findIndex != -1) {
+                    newData = newData.filter(el=> new Date(el.PERIODEND) > new Date(finalCalendarDate.PERIODEND));
+                    // newData = newData.filter(findIndex + 1);
+                }
+                else {
+                    //check if excel data is a continuity of calendar data
+                    const prevEnd = getISO(new Date(finalCalendarDate.PERIODEND));
+                    const currStart = getExcelDate(startExcelDate.PERIODSTART);
+
+                    const expectedStart = new Date(prevEnd);
+                    expectedStart.setDate(expectedStart.getDate() + 1);
+                    expectedStart.setHours(0, 0, 0, 0);
+
+                    const actualStart = new Date(currStart);
+                    actualStart.setHours(0, 0, 0, 0);
+
+                    if (actualStart.getTime() !== expectedStart.getTime()) {
+                        result.data = [];
+                        result.message = "Uploaded data is not continuous with the existing calendar data.";
+                        return result;
+                    }
+                }
+            }
+            //case 3: Planning data exists only in calendar data & not in Excel file 
+            else if (arrayItemExcel.length == 0 && arrayItemCalendar.length > 0) {
+                const startExcelDate = newData[0];
+                const endExcelDate = newData.at(-1);
+                if (getExcelDate(endExcelDate.PERIODEND) < getISO(plannedDate)) {
+                    result.data = [];
+                    result.message = "Uploaded data includes dates marked for pre-planning only. Modifications are not permitted.";
+                    return result;
+                }
+                const findIndex = ibpCalendarData.findIndex(el => getISO(new Date(el.PERIODEND)) == getExcelDate(startExcelDate.PERIODEND));
+                if (findIndex != -1) {
+                    // ibpCalendarData = ibpCalendarData.slice(0, findIndex);
+                    ibpCalendarData = ibpCalendarData.filter(el=> getISO(new Date(el.PERIODEND)) < getExcelDate(startExcelDate.PERIODEND));
+                }
+                else {
+                    //check if excel data is a continuity of calendar data
+                    const prevEnd = getISO(new Date(ibpCalendarData.at(-1).PERIODEND));
+                    const currStart = getExcelDate(startExcelDate.PERIODSTART);
+
+                    const expectedStart = new Date(prevEnd);
+                    expectedStart.setDate(expectedStart.getDate() + 1);
+                    expectedStart.setHours(0, 0, 0, 0);
+
+                    const actualStart = new Date(currStart);
+                    actualStart.setHours(0, 0, 0, 0);
+
+                    if (actualStart.getTime() !== expectedStart.getTime()) {
+                        result.data = [];
+                        result.message = "Uploaded data is not continuous with the existing calendar data.";
+                        return result;
+                    }
+                }
+            }
+            //case 4: Planning data doesn't exists in both files 
+            else if (arrayItemExcel.length == 0 && arrayItemCalendar.length == 0) {
+                const endCalDate = ibpCalendarData.at(-1);
+                const startExcelDate = newData[0];
+                const findIndex = newData.findIndex(el => getExcelDate(el.PERIODEND) == getISO(new Date(endCalDate.PERIODEND)));
+                if (findIndex != -1) {
+                    // newData = newData.slice(findIndex + 1);
+                    newData=newData.filter(el => getExcelDate(el.PERIODEND) > getISO(new Date(endCalDate.PERIODEND)));
+                }
+                else {
+                    //check if excel data is a continuity of calendar data
+                    const prevEnd = getISO(new Date(endCalDate.PERIODEND));
+                    const currStart = getExcelDate(startExcelDate.PERIODSTART);
+
+                    const expectedStart = new Date(prevEnd);
+                    expectedStart.setDate(expectedStart.getDate() + 1);
+                    expectedStart.setHours(0, 0, 0, 0);
+
+                    const actualStart = new Date(currStart);
+                    actualStart.setHours(0, 0, 0, 0);
+
+                    if (actualStart.getTime() !== expectedStart.getTime()) {
+                        result.data = [];
+                        result.message = "Uploaded data is not continuous with the existing calendar data.";
+                        return result;
+                    }
+                }
             }
 
             // Step 2: Group by LEVEL
             const levels = ['W', 'M', 'Q'];
-            const markedIBPData = ibpCalendarData.map(item => ({
+            const existingLevelData = ibpCalendarData.map(item => ({
                 ...item,
-                SOURCE: item.SOURCE || 'IBP'
+                SOURCE: 'IBP'
             }));
-
-            for (const level of levels) {
-                const existingLevelData = markedIBPData.filter(item =>
-                    item.LEVEL === level &&
-                    new Date(item.PERIODSTART_UTC || item.PERIODSTART) <= cutoffDate
-                );
-
-                const newLevelData = newData
-                    .filter(item =>
-                        item.LEVEL === level &&
-                        new Date(item.PERIODSTART_UTC) > cutoffDate
-                    )
-                    .map(item => ({ ...item, SOURCE: 'UPLOAD' }));
-
-                result.push(...existingLevelData, ...newLevelData);
-            }
+            const newLevelData = newData.map(item => ({ ...item, SOURCE: 'UPLOAD' }));
+            result.push(...existingLevelData, ...newLevelData);
 
             // Step 3: Sort by TPLEVEL, then PERIODSTART
             return result.sort((a, b) => {
@@ -226,6 +282,87 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/model/json/JSONModel", "./DateUtils
                 return new Date(a.PERIODSTART) - new Date(b.PERIODSTART);
             });
         },
+        // mergeWithIBPCalendarData(newData, ibpCalendarData, plannedDate) {
+        //     const result = [];
+        //     newData.sort((a, b) => a.TPLEVEL - b.TPLEVEL || new Date(a.PERIODSTART) - new Date(b.PERIODSTART));
+        //     if (!ibpCalendarData?.length) {
+        //         return newData.map(item => ({ ...item, SOURCE: 'UPLOAD' }));
+        //     }
+        
+        //     const getISO = DateUtils.getISODate;
+        //     const isoPlanned = getISO(plannedDate);
+        
+        //     const arrayItemExcel = newData.filter(el =>
+        //         getISO(el.PERIODSTART) <= isoPlanned &&
+        //         getISO(el.PERIODEND) >= isoPlanned &&
+        //         el.LEVEL === "Q"
+        //     );
+        
+        //     const arrayItemCalendar = ibpCalendarData.filter(el =>
+        //         getISO(el.PERIODSTART) <= isoPlanned &&
+        //         getISO(el.PERIODEND) >= isoPlanned &&
+        //         el.LEVEL === "Q"
+        //     );
+        //     const getCleanDate = date => {
+        //         const d = new Date(date);
+        //         d.setHours(0, 0, 0, 0);
+        //         return d;
+        //     };
+        
+        //     const isContinuous = (prevEnd, currStart) => {
+        //         const expectedStart = getCleanDate(new Date(prevEnd));
+        //         expectedStart.setDate(expectedStart.getDate() + 1);
+        //         return getCleanDate(currStart).getTime() === expectedStart.getTime();
+        //     };
+        
+        //     const lastCalendar = ibpCalendarData.at(-1);
+        //     const firstExcel = newData[0];
+        //     const lastExcel = newData.at(-1);
+        
+        //     if (arrayItemExcel.length && arrayItemCalendar.length) {
+        //         const cutoffDate = new Date(arrayItemExcel[0].PERIODEND);
+        //         newData = newData.filter(el => new Date(el.PERIODEND) > cutoffDate);
+        //         ibpCalendarData = ibpCalendarData.filter(el => new Date(el.PERIODEND) <= cutoffDate);
+        
+        //     } else if (arrayItemExcel.length && !arrayItemCalendar.length) {
+        //         const matchIndex = newData.findIndex(el => getISO(el.PERIODEND) === getISO(lastCalendar.PERIODEND));
+        
+        //         if (matchIndex !== -1) {
+        //             newData = newData.slice(matchIndex + 1);
+        //         } else if (!isContinuous(getISO(lastCalendar.PERIODEND), getISO(firstExcel.PERIODSTART))) {
+        //             return { data: [], message: "Uploaded data is not continuous with the existing calendar data." };
+        //         }
+        
+        //     } else if (!arrayItemExcel.length && arrayItemCalendar.length) {
+        //         if (getISO(lastExcel.PERIODEND) < isoPlanned) {
+        //             return { data: [], message: "Uploaded data includes dates marked for pre-planning only. Modifications are not permitted." };
+        //         }
+        
+        //         const matchIndex = ibpCalendarData.findIndex(el => getISO(el.PERIODEND) === getISO(firstExcel.PERIODEND));
+        //         if (matchIndex !== -1) {
+        //             ibpCalendarData = ibpCalendarData.slice(0, matchIndex);
+        //         } else if (!isContinuous(getISO(lastCalendar.PERIODEND), getISO(firstExcel.PERIODSTART))) {
+        //             return { data: [], message: "Uploaded data is not continuous with the existing calendar data." };
+        //         }
+        
+        //     } else {
+        //         const matchIndex = newData.findIndex(el => getISO(el.PERIODEND) === getISO(lastCalendar.PERIODEND));
+        //         if (matchIndex !== -1) {
+        //             newData = newData.slice(matchIndex + 1);
+        //         } 
+        //         else if (!isContinuous(getISO(lastCalendar.PERIODEND), getISO(firstExcel.PERIODSTART))) {
+        //             return { data: [], message: "Uploaded data is not continuous with the existing calendar data." };
+        //         }
+        //     }
+        
+        //     const merged = [
+        //         ...ibpCalendarData.map(item => ({ ...item, SOURCE: 'IBP' })),
+        //         ...newData.map(item => ({ ...item, SOURCE: 'UPLOAD' }))
+        //     ];
+        
+        //     return merged.sort((a, b) => a.TPLEVEL - b.TPLEVEL || new Date(a.PERIODSTART) - new Date(b.PERIODSTART));
+        // },
+        
 
         handleDuplicatesAndFinalize(mergedData) {
             // Group by unique period identifier
@@ -493,38 +630,38 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/model/json/JSONModel", "./DateUtils
             result.setDate(result.getDate() + days);
             return result;
         },
-        getNextSunday: function(date) {
+        getNextSunday: function (date) {
             const day = date.getDay(); // 0 = Sunday, 6 = Saturday
             const daysToAdd = day === 0 ? 7 : 7 - day;
             date.setDate(date.getDate() + daysToAdd);
             return date;
         },
         compareArrays: function (arr1, arr2) {
-                        if (arr1.length !== arr2.length) return false;
-            
-                        const getSortableDate = dateVal => new Date(dateVal).toISOString().split("T")[0];
-            
-                        // Sort both arrays to ensure order doesn't affect comparison
-                        const sorted1 = [...arr1].sort((a, b) =>
-                            getSortableDate(a.PERIODSTART_UTC).localeCompare(getSortableDate(b.PERIODSTART_UTC))
-                        );
-                        const sorted2 = [...arr2].sort((a, b) =>
-                            getSortableDate(a.PERIODSTART_UTC).localeCompare(getSortableDate(b.PERIODSTART_UTC))
-                        );
-            
-                        for (let i = 0; i < sorted1.length; i++) {
-                            const a = sorted1[i];
-                            const b = sorted2[i];
-            
-                            if (
-                                getSortableDate(a.PERIODSTART_UTC) !== getSortableDate(b.PERIODSTART_UTC) ||
-                                getSortableDate(a.PERIODEND_UTC) !== getSortableDate(b.PERIODEND_UTC) ||
-                                a.PERIODDESC !== b.PERIODDESC
-                            ) {
-                                return false;
-                            }
-                        }
-                        return true;
-                    },
+            if (arr1.length !== arr2.length) return false;
+
+            const getSortableDate = dateVal => new Date(dateVal).toISOString().split("T")[0];
+
+            // Sort both arrays to ensure order doesn't affect comparison
+            const sorted1 = [...arr1].sort((a, b) =>
+                getSortableDate(a.PERIODSTART_UTC).localeCompare(getSortableDate(b.PERIODSTART_UTC))
+            );
+            const sorted2 = [...arr2].sort((a, b) =>
+                getSortableDate(a.PERIODSTART_UTC).localeCompare(getSortableDate(b.PERIODSTART_UTC))
+            );
+
+            for (let i = 0; i < sorted1.length; i++) {
+                const a = sorted1[i];
+                const b = sorted2[i];
+
+                if (
+                    getSortableDate(a.PERIODSTART_UTC) !== getSortableDate(b.PERIODSTART_UTC) ||
+                    getSortableDate(a.PERIODEND_UTC) !== getSortableDate(b.PERIODEND_UTC) ||
+                    a.PERIODDESC !== b.PERIODDESC
+                ) {
+                    return false;
+                }
+            }
+            return true;
+        },
     };
 });

@@ -939,6 +939,7 @@ sap.ui.define([
 
         onUpload1(e) {
             sap.ui.core.BusyIndicator.show();
+            var calData = this.ibpCalenderWeek
             ExcelUtils.importExcel(e.getParameter("files")[0], this);
         },
         Emport(excelData) {
@@ -952,6 +953,7 @@ sap.ui.define([
             }
 
             this.byId("idTab").setModel(new JSONModel({ results: data }));
+            sap.m.MessageToast.show("Upload Successfull");
             this.ibpCalenderWeek = data;
             sap.ui.core.BusyIndicator.hide();
         },
