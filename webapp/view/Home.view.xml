@@ -70,8 +70,8 @@ itemPress="onhandlePress" mode="None" selectionChange="onhandlePress" sticky="Co
                                                                          <Text id="_IDGenText17" text="{MONTHWEIGHT}"/>
                                                                         <!-- <Text text="{PERIODSTART_UTC}"/> -->
 <!--                                                                         <Text id="_IDGenText18" text="{path:'WEEK_START', type:'sap.ui.model.type.Date', formatOptions: {pattern:'yyyy-MM-dd'}}"/> -->
-                                                                        <Text text="{WEEK_START}"/>
-                                                                        <Text text="{WEEK_END}"/>
+                                                                        <Text id="_IDGenText18" text="{WEEK_START}"/>
+                                                                        <Text id="_IDGenText19" text="{WEEK_END}"/>
 <!--                                                                         <Text id="_IDGenText19" text="{path:'WEEK_END', type:'sap.ui.model.type.Date', formatOptions: {pattern:'yyyy-MM-dd'}}"/> -->
                                                                         <Text id="_IDGenText20" text="{TempID}"/>
                                                                         
@@ -88,11 +88,12 @@ itemPress="onhandlePress" mode="None" selectionChange="onhandlePress" sticky="Co
                 <Table id="idTelescopicTab" items="{path: '/results'}" 
                     growingScrollToLoad="true" growingThreshold="1000" growing="true" 
                     sticky="ColumnHeaders" mode="None">
-                    <headerToolbar>
+                    <infoToolbar>
                     <OverflowToolbar id="_IDGenOverflowToolbar1">
-                    <Button id="idRefresh" icon="" press="onRefreshPress"/>
+                    <ToolbarSpacer id="_IDGenToolbarSpacer2"/>
+                    <Button id="idRefresh" icon="sap-icon://refresh" press="onRefreshPress" type="Emphasized"/>
                      </OverflowToolbar>
-                    </headerToolbar>
+                    </infoToolbar>
                     <columns>
                     <Column id="_IDGenColumn14"><Text id="_IDGenText24" text="Level"/></Column>
                         <Column id="_IDGenColumn11"><Text id="_IDGenText21" text="Period Start"/></Column>

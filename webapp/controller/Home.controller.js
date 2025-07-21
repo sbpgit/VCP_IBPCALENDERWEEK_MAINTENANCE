@@ -865,20 +865,22 @@ sap.ui.define([
     "sap/m/MessageToast"
 ], (Controller, formatter, DateUtils, ExcelUtils, DataValidator, JSONModel, Filter, FilterOperator, Spreadsheet, exportLibrary) => {
     "use strict";
-
+    var that, oGModel;
     const EdmType = exportLibrary.EdmType;
-
     return Controller.extend("vcpapp.vcpibpcalendarmaintenance.controller.Home", {
         formatter: formatter,
-
         onInit() {
+            that = this;
+            that.oGModel = that.getOwnerComponent().getModel("oGModel");
             this._viewModel = new JSONModel({ showFooter: true });
             this.getView().setModel(this._viewModel, "viewModel");
             this._loadTelescopicValues();
             this._loadTelescopicData();
             this._loadCalendarWeek();
         },
-
+        onAfterRendering:function(){
+            this.saveFlag = "";
+        },
         _loadTelescopicValues() {
             this.getOwnerComponent().getModel("oModel").callFunction("/getTelescopicValues", {
                 success: (oData) => {
@@ -891,10 +893,16 @@ sap.ui.define([
         },
 
         _loadTelescopicData() {
+            sap.ui.core.BusyIndicator.show();
             this.getOwnerComponent().getModel("oModel").read("/getTelescopicData", {
                 success: (oData) => {
+                    sap.ui.core.BusyIndicator.hide();
                     const telescopicModel = new JSONModel({ results: oData.results });
                     this.byId("idTelescopicTab").setModel(telescopicModel);
+                },
+                error:(e)=>{
+                    sap.ui.core.BusyIndicator.hide();
+                    sap.m.MessageToast.show("Failed to get telescopic data");
                 }
             });
         },
@@ -904,7 +912,6 @@ sap.ui.define([
             this.Flag = "";
             this.descArray = [];
             sap.ui.core.BusyIndicator.show();
-
             this.getOwnerComponent().getModel("oModel").read("/getIBPCalenderWeek", {
                 success: (oData) => {
                     const results = oData.results.map(el => {
@@ -927,6 +934,7 @@ sap.ui.define([
                     });
 
                     this.ibpCalenderWeek = results.sort((a, b) => parseInt(a.PERIODID) - parseInt(b.PERIODID));
+                    that.oGModel.setProperty("/calendarData", this.ibpCalenderWeek);
                     this.byId("idTab").setModel(new JSONModel({ results: this.ibpCalenderWeek }));
                     sap.ui.core.BusyIndicator.hide();
                 },
@@ -938,13 +946,14 @@ sap.ui.define([
         },
 
         onUpload1(e) {
+            // this.saveFlag = "X";
             sap.ui.core.BusyIndicator.show();
             var calData = this.ibpCalenderWeek
             ExcelUtils.importExcel(e.getParameter("files")[0], this);
         },
         Emport(excelData) {
-
-            const { data, hasDuplicates, isContinuous, message = "Periods are not continuous. Please correct and upload again." } = ExcelUtils.emport(excelData, new Date().getTimezoneOffset(), this.ibpCalenderWeek, this.teleData);
+            var ibpCalendarData1 = that.oGModel.getProperty("/calendarData");
+            const { data, hasDuplicates, isContinuous, message = "Periods are not continuous. Please correct and upload again." } = ExcelUtils.emport(excelData, new Date().getTimezoneOffset(), ibpCalendarData1, this.teleData);
 
             if (!isContinuous) {
                 sap.ui.core.BusyIndicator.hide();
@@ -958,6 +967,7 @@ sap.ui.define([
             sap.ui.core.BusyIndicator.hide();
         },
         onSavePress() {
+            
             sap.ui.core.BusyIndicator.show();
             const tableData = this.byId("idTab").getItems();
             const payload = ExcelUtils.buildPayloadFromTable(tableData, this);
@@ -970,7 +980,11 @@ sap.ui.define([
                 success: (oData) => {
                     const success = oData.updateCalenderWeek.includes("Successfully");
                     sap.m.MessageToast.show(success ? "Updated successfully" : "Updation failed");
-                    if (success) this._loadCalendarWeek();
+                    if (success) {
+                        this._loadCalendarWeek()
+                        // this.onAfterRendering();
+                        this.saveFlag = "Y";
+                    };
                     sap.ui.core.BusyIndicator.hide();
                 },
                 error: () => {

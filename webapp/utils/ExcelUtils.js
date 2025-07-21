@@ -19,24 +19,7 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/model/json/JSONModel", "./DateUtils
                     if (excelData.length > 0) {
                         const timezoneOffset = new Date().getTimezoneOffset();
                         const ibpCalendarData = context.ibpCalenderWeek || [];
-
-                        // if (uploadFlag !== "X") {
                             context.Emport(excelData, timezoneOffset, ibpCalendarData);
-                        // }
-                        // else {
-                        //     uploadFlag = " ";
-                        // }
-                        // context.byId("idTab").setModel(new JSONModel({ results: result.data }));
-                        // context.ibpCalenderWeek = result.data;
-
-                        // if (!result.isContinuous) {
-                        //     MessageToast.show(result.validationError || "Periods are not continuous. Please correct and upload again.");
-                        //     return;
-                        // }
-
-                        // if (result.hasDuplicates) {
-                        //     MessageToast.show("Duplicates found and merged successfully.");
-                        // }
                     } else {
                         sap.ui.core.BusyIndicator.hide();
                         if (uploadFlag !== "X") {
@@ -57,6 +40,10 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/model/json/JSONModel", "./DateUtils
 
         emport(array, timezoneOffset, ibpCalendarData, plannedDate) {
             uploadFlag = "X";
+            return this.export(array, timezoneOffset,ibpCalendarData, plannedDate);
+           
+        },
+        export(array, timezoneOffset, ibpCalendarData, plannedDate){
 
             // ibpCalendarData contains existing calendar data from context.ibpCalenderWeek
             // It's only empty on the very first upload, otherwise contains existing periods
@@ -282,88 +269,6 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/model/json/JSONModel", "./DateUtils
                 return new Date(a.PERIODSTART) - new Date(b.PERIODSTART);
             });
         },
-        // mergeWithIBPCalendarData(newData, ibpCalendarData, plannedDate) {
-        //     const result = [];
-        //     newData.sort((a, b) => a.TPLEVEL - b.TPLEVEL || new Date(a.PERIODSTART) - new Date(b.PERIODSTART));
-        //     if (!ibpCalendarData?.length) {
-        //         return newData.map(item => ({ ...item, SOURCE: 'UPLOAD' }));
-        //     }
-        
-        //     const getISO = DateUtils.getISODate;
-        //     const isoPlanned = getISO(plannedDate);
-        
-        //     const arrayItemExcel = newData.filter(el =>
-        //         getISO(el.PERIODSTART) <= isoPlanned &&
-        //         getISO(el.PERIODEND) >= isoPlanned &&
-        //         el.LEVEL === "Q"
-        //     );
-        
-        //     const arrayItemCalendar = ibpCalendarData.filter(el =>
-        //         getISO(el.PERIODSTART) <= isoPlanned &&
-        //         getISO(el.PERIODEND) >= isoPlanned &&
-        //         el.LEVEL === "Q"
-        //     );
-        //     const getCleanDate = date => {
-        //         const d = new Date(date);
-        //         d.setHours(0, 0, 0, 0);
-        //         return d;
-        //     };
-        
-        //     const isContinuous = (prevEnd, currStart) => {
-        //         const expectedStart = getCleanDate(new Date(prevEnd));
-        //         expectedStart.setDate(expectedStart.getDate() + 1);
-        //         return getCleanDate(currStart).getTime() === expectedStart.getTime();
-        //     };
-        
-        //     const lastCalendar = ibpCalendarData.at(-1);
-        //     const firstExcel = newData[0];
-        //     const lastExcel = newData.at(-1);
-        
-        //     if (arrayItemExcel.length && arrayItemCalendar.length) {
-        //         const cutoffDate = new Date(arrayItemExcel[0].PERIODEND);
-        //         newData = newData.filter(el => new Date(el.PERIODEND) > cutoffDate);
-        //         ibpCalendarData = ibpCalendarData.filter(el => new Date(el.PERIODEND) <= cutoffDate);
-        
-        //     } else if (arrayItemExcel.length && !arrayItemCalendar.length) {
-        //         const matchIndex = newData.findIndex(el => getISO(el.PERIODEND) === getISO(lastCalendar.PERIODEND));
-        
-        //         if (matchIndex !== -1) {
-        //             newData = newData.slice(matchIndex + 1);
-        //         } else if (!isContinuous(getISO(lastCalendar.PERIODEND), getISO(firstExcel.PERIODSTART))) {
-        //             return { data: [], message: "Uploaded data is not continuous with the existing calendar data." };
-        //         }
-        
-        //     } else if (!arrayItemExcel.length && arrayItemCalendar.length) {
-        //         if (getISO(lastExcel.PERIODEND) < isoPlanned) {
-        //             return { data: [], message: "Uploaded data includes dates marked for pre-planning only. Modifications are not permitted." };
-        //         }
-        
-        //         const matchIndex = ibpCalendarData.findIndex(el => getISO(el.PERIODEND) === getISO(firstExcel.PERIODEND));
-        //         if (matchIndex !== -1) {
-        //             ibpCalendarData = ibpCalendarData.slice(0, matchIndex);
-        //         } else if (!isContinuous(getISO(lastCalendar.PERIODEND), getISO(firstExcel.PERIODSTART))) {
-        //             return { data: [], message: "Uploaded data is not continuous with the existing calendar data." };
-        //         }
-        
-        //     } else {
-        //         const matchIndex = newData.findIndex(el => getISO(el.PERIODEND) === getISO(lastCalendar.PERIODEND));
-        //         if (matchIndex !== -1) {
-        //             newData = newData.slice(matchIndex + 1);
-        //         } 
-        //         else if (!isContinuous(getISO(lastCalendar.PERIODEND), getISO(firstExcel.PERIODSTART))) {
-        //             return { data: [], message: "Uploaded data is not continuous with the existing calendar data." };
-        //         }
-        //     }
-        
-        //     const merged = [
-        //         ...ibpCalendarData.map(item => ({ ...item, SOURCE: 'IBP' })),
-        //         ...newData.map(item => ({ ...item, SOURCE: 'UPLOAD' }))
-        //     ];
-        
-        //     return merged.sort((a, b) => a.TPLEVEL - b.TPLEVEL || new Date(a.PERIODSTART) - new Date(b.PERIODSTART));
-        // },
-        
-
         handleDuplicatesAndFinalize(mergedData) {
             // Group by unique period identifier
             const periodGroups = new Map();
@@ -586,17 +491,6 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/model/json/JSONModel", "./DateUtils
             if (qtrIndex !== -1) {
                 const finalDownqtrData = quarterData.slice(qtrIndex + 1);
                 if (!finalDownqtrData.length) return [];
-
-                // const firstQuarterEnd = getISO(finalDownqtrData[0].PERIODEND_UTC);
-                // const monthIndex = monthData.findIndex(el => getISO(el.PERIODEND_UTC) === firstQuarterEnd);
-                // const weekIndex = weekData.findIndex(el => getISO(el.PERIODEND_UTC) === firstQuarterEnd);
-
-                // const finalData = [
-                //     ...weekData.slice(weekIndex),
-                //     ...monthData.slice(monthIndex),
-                //     ...finalDownqtrData
-                // ];
-
                 const firstQuarterStart = getISO(finalDownqtrData[0].PERIODSTART_UTC);
                 const monthIndex = monthData.findIndex(el => getISO(el.PERIODSTART_UTC) === firstQuarterStart);
                 const weekIndex = weekData.findIndex(el => getISO(el.PERIODSTART_UTC) === firstQuarterStart);

@@ -81,7 +81,14 @@
         "dataSource": "mainService",
         "preload": true,
         "settings": {}
-      }
+      },
+      "oGModel": {
+        "type": "sap.ui.model.json.JSONModel",
+        "settings": {
+            "defaultBindingMode": "TwoWay"
+        },
+        "preload": true
+    }
     },
     "resources": {
       "css": [
