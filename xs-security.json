@@ -25,7 +25,7 @@
     "name": "VCPSupportRole",
     "description": "UAA VCPSupportRole",
     "scope-references": [
-      "$XSAPPNAME.read"
+      "$XSAPPNAME.admin"
     ]
   } 
 ],
