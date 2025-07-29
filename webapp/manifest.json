@@ -60,7 +60,7 @@
   "sap.ui5": {
     "flexEnabled": true,
     "dependencies": {
-      "minUI5Version": "1.126.1",
+      "minUI5Version": "1.136.1",
       "libs": {
         "sap.m": {},
         "sap.ui.core": {}
@@ -85,10 +85,10 @@
       "oGModel": {
         "type": "sap.ui.model.json.JSONModel",
         "settings": {
-            "defaultBindingMode": "TwoWay"
+          "defaultBindingMode": "TwoWay"
         },
         "preload": true
-    }
+      }
     },
     "resources": {
       "css": [
@@ -141,6 +141,6 @@
       "$XSAPPNAME.User",
       "$XSAPPNAME.admin"
     ],
-    "ui5VersionNumber": "1.126.1"
+    "ui5VersionNumber": "1.136.1"
   }
 }
