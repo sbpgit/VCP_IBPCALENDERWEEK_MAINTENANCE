@@ -27,14 +27,7 @@
     "scope-references": [
       "$XSAPPNAME.read"
     ]
-  },
-  {
-    "name": "VCPSupportAdminRole",
-    "description": "UAA VCPSupportAdminRole",
-    "scope-references": [
-      "$XSAPPNAME.admin"
-    ]
-  }  
+  } 
 ],
 "oauth2-configuration": {
   "token-validity": 3600,
