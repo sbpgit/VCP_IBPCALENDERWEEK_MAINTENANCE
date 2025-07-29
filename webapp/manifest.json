@@ -60,7 +60,7 @@
   "sap.ui5": {
     "flexEnabled": true,
     "dependencies": {
-      "minUI5Version": "1.136.1",
+      "minUI5Version": "1.122.2",
       "libs": {
         "sap.m": {},
         "sap.ui.core": {}
@@ -135,5 +135,12 @@
   "sap.cloud": {
     "public": true,
     "service": "vcpappvcpibpcalendarmaintenance"
+  },
+  "sap.platform.cf": {
+    "oAuthScopes": [
+      "$XSAPPNAME.User",
+      "$XSAPPNAME.admin"
+    ],
+    "ui5VersionNumber": "1.122.2"
   }
 }
