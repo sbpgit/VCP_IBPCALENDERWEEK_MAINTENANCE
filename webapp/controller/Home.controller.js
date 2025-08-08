@@ -31,7 +31,7 @@
 //                 success: function (oData) {
 //                     var data = (oData.results);
 //                     var telescopicModel = new sap.ui.model.json.JSONModel({ results: data });
-//                     that.byId("idTelescopicTab").setModel(telescopicModel);
+//                     that.byId("idTelescopicTabCM").setModel(telescopicModel);
 //                 }
 //             });
 //             var oViewModel = new sap.ui.model.json.JSONModel({
@@ -68,7 +68,7 @@
 //                         that.ibpCalenderWeek = oData.results.sort((a, b) => parseInt(a.PERIODID) - parseInt(b.PERIODID));
 //                         var newModel = new JSONModel();
 //                         newModel.setData({ results: oData.results });
-//                         that.byId("idTab").setModel(newModel);
+//                         that.byId("idTabCM").setModel(newModel);
 //                     }
 //                     else {
 //                         sap.m.MessageToast.show("No data available in VCP Calender week")
@@ -298,16 +298,16 @@
 //                         that.ibpCalenderWeek = finalMergdeData;
 //                         var newModel = new JSONModel();
 //                         newModel.setData({ results: finalMergdeData });
-//                         that.byId("idTab").setModel(newModel);
+//                         that.byId("idTabCM").setModel(newModel);
 //                     }
 
 //                     if (that.Flag === "X") {
 //                         sap.m.MessageToast.show("Duplicates exists in Period Descriptions. Please recheck")
-//                         that.byId("idSave").setEnabled(false);
+//                         that.byId("idSaveCM").setEnabled(false);
 //                     }
 //                     else {
 //                         that.Flag = '';
-//                         that.byId("idSave").setEnabled(true);
+//                         that.byId("idSaveCM").setEnabled(true);
 //                     }
 //                 }
 //                 else {
@@ -331,14 +331,14 @@
 //                     });
 //                     var newModel = new JSONModel();
 //                     newModel.setData({ results: data });
-//                     that.byId("idTab").setModel(newModel);
+//                     that.byId("idTabCM").setModel(newModel);
 //                     if (that.Flag === "X") {
 //                         sap.m.MessageToast.show("Duplicates exists in Period Descriptions. Please recheck")
-//                         that.byId("idSave").setEnabled(false);
+//                         that.byId("idSaveCM").setEnabled(false);
 //                     }
 //                     else {
 //                         that.Flag = '';
-//                         that.byId("idSave").setEnabled(true);
+//                         that.byId("idSaveCM").setEnabled(true);
 //                     }
 //                 }
 //             }
@@ -381,7 +381,7 @@
 //         //Function to save entries into VCP calender
 //         onSavePress: function () {
 //             sap.ui.core.BusyIndicator.show();
-//             var tableData = that.byId("idTab").getItems();
+//             var tableData = that.byId("idTabCM").getItems();
 //             var final = {}, finalArray = [];
 //             tableData.forEach(el => {
 //                 if (el.getCells()[7].getText() === '') {
@@ -440,7 +440,7 @@
 //             var input = oEvent.getSource();
 //             var inputValue = input.getValue();
 //             const indexes = [];
-//             that.byId("idTab").getItems().forEach((value, index) => {
+//             that.byId("idTabCM").getItems().forEach((value, index) => {
 //                 if (value.getCells()[5].getValue() === inputValue) {
 //                     indexes.push(index);
 //                 }
@@ -448,15 +448,15 @@
 //             if (indexes.length > 1) {
 //                 input.setValueState("Error");
 //                 input.setValueStateText("Entry already exists");
-//                 that.byId("idSave").setEnabled(false);
+//                 that.byId("idSaveCM").setEnabled(false);
 //             }
 //             else {
 //                 input.setValueState("None");
-//                 that.byId("idSave").setEnabled(true);
+//                 that.byId("idSaveCM").setEnabled(true);
 //             }
 //         },
 //         onPressBrowse: function (oEvent) {
-//             that.byId("FileUploader").openFilePicker(oEvent);
+//             that.byId("FileUploaderCM").openFilePicker(oEvent);
 //         },
 //         //download excel template
 //         oDownloadTemplate: function () {
@@ -740,14 +740,14 @@
 //             });
 //             var newModel = new JSONModel();
 //             newModel.setData({ results: finalMergdeData });
-//             that.byId("idTab").setModel(newModel);
+//             that.byId("idTabCM").setModel(newModel);
 //             if (that.Flag === "X") {
 //                 sap.m.MessageToast.show("Duplicates exists in Period Descriptions. Please recheck")
-//                 that.byId("idSave").setEnabled(false);
+//                 that.byId("idSaveCM").setEnabled(false);
 //             }
 //             else {
 //                 that.Flag = '';
-//                 that.byId("idSave").setEnabled(true);
+//                 that.byId("idSaveCM").setEnabled(true);
 //             }
 //         },
 //         compareArrays: function (arr1, arr2) {
@@ -837,7 +837,7 @@
 //                 success: function (oData) {
 //                     var data = (oData.results);
 //                     var telescopicModel = new sap.ui.model.json.JSONModel({ results: data });
-//                     that.byId("idTelescopicTab").setModel(telescopicModel);
+//                     that.byId("idTelescopicTabCM").setModel(telescopicModel);
 //                 }
 //             });
 //         },
@@ -898,7 +898,7 @@ sap.ui.define([
                 success: (oData) => {
                     sap.ui.core.BusyIndicator.hide();
                     const telescopicModel = new JSONModel({ results: oData.results });
-                    this.byId("idTelescopicTab").setModel(telescopicModel);
+                    this.byId("idTelescopicTabCM").setModel(telescopicModel);
                 },
                 error:(e)=>{
                     sap.ui.core.BusyIndicator.hide();
@@ -935,7 +935,7 @@ sap.ui.define([
 
                     this.ibpCalenderWeek = results.sort((a, b) => parseInt(a.PERIODID) - parseInt(b.PERIODID));
                     that.oGModel.setProperty("/calendarData", this.ibpCalenderWeek);
-                    this.byId("idTab").setModel(new JSONModel({ results: this.ibpCalenderWeek }));
+                    this.byId("idTabCM").setModel(new JSONModel({ results: this.ibpCalenderWeek }));
                     sap.ui.core.BusyIndicator.hide();
                 },
                 error: () => {
@@ -961,7 +961,7 @@ sap.ui.define([
                 return;
             }
 
-            this.byId("idTab").setModel(new JSONModel({ results: data }));
+            this.byId("idTabCM").setModel(new JSONModel({ results: data }));
             sap.m.MessageToast.show("Upload Successfull");
             this.ibpCalenderWeek = data;
             sap.ui.core.BusyIndicator.hide();
@@ -969,7 +969,7 @@ sap.ui.define([
         onSavePress() {
             
             sap.ui.core.BusyIndicator.show();
-            const tableData = this.byId("idTab").getItems();
+            const tableData = this.byId("idTabCM").getItems();
             const payload = ExcelUtils.buildPayloadFromTable(tableData, this);
 
             this.getOwnerComponent().getModel("oModel").callFunction("/updateCalenderWeek", {
@@ -997,16 +997,16 @@ sap.ui.define([
         onPeriodChange(oEvent) {
             const input = oEvent.getSource();
             const inputValue = input.getValue();
-            const duplicates = this.byId("idTab").getItems().filter(row => row.getCells()[5].getValue() === inputValue);
+            const duplicates = this.byId("idTabCM").getItems().filter(row => row.getCells()[5].getValue() === inputValue);
             const isDuplicate = duplicates.length > 1;
 
             input.setValueState(isDuplicate ? "Error" : "None");
             input.setValueStateText(isDuplicate ? "Entry already exists" : "");
-            this.byId("idSave").setEnabled(!isDuplicate);
+            this.byId("idSaveCM").setEnabled(!isDuplicate);
         },
 
         onPressBrowse(oEvent) {
-            this.byId("FileUploader").openFilePicker(oEvent);
+            this.byId("FileUploaderCM").openFilePicker(oEvent);
         },
 
         oDownloadTemplate() {
