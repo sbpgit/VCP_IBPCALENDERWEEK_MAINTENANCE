@@ -19,7 +19,7 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/model/json/JSONModel", "./DateUtils
                     if (excelData.length > 0) {
                         const timezoneOffset = new Date().getTimezoneOffset();
                         const ibpCalendarData = context.ibpCalenderWeek || [];
-                            context.Emport(excelData, timezoneOffset, ibpCalendarData);
+                        context.Emport(excelData, timezoneOffset, ibpCalendarData);
                     } else {
                         sap.ui.core.BusyIndicator.hide();
                         if (uploadFlag !== "X") {
@@ -40,10 +40,10 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/model/json/JSONModel", "./DateUtils
 
         emport(array, timezoneOffset, ibpCalendarData, plannedDate) {
             uploadFlag = "X";
-            return this.export(array, timezoneOffset,ibpCalendarData, plannedDate);
-           
+            return this.export(array, timezoneOffset, ibpCalendarData, plannedDate);
+
         },
-        export(array, timezoneOffset, ibpCalendarData, plannedDate){
+        export(array, timezoneOffset, ibpCalendarData, plannedDate) {
 
             // ibpCalendarData contains existing calendar data from context.ibpCalenderWeek
             // It's only empty on the very first upload, otherwise contains existing periods
@@ -116,8 +116,13 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/model/json/JSONModel", "./DateUtils
                         el.WEEK_END = sunday.toISOString().split("T")[0];
                     } else if (el.LEVEL === "M" || el.LEVEL === "Q") {
                         const adjustedEnd = new Date(end.getTime() - timezoneOffset * 60 * 1000);
-                        const nextSundayEnd = this.getNextSunday(adjustedEnd);
-                        el.WEEK_END = nextSundayEnd.toISOString().split("T")[0];
+                       
+                        const nextSundayEnd =
+                            adjustedEnd.getDay() === 0
+                                ? adjustedEnd
+                                : this.getNextSunday(adjustedEnd);
+                        el.WEEK_END = nextSundayEnd.toLocaleDateString("en-CA");
+                        // el.WEEK_END = nextSundayEnd.toISOString().split("T")[0];
                     }
 
                     result.push({
@@ -131,7 +136,7 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/model/json/JSONModel", "./DateUtils
                         SOURCE: 'UPLOAD' // Mark as uploaded data
                     });
                 }
-                
+
                 return result;
             }, []);
         },
@@ -170,7 +175,7 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/model/json/JSONModel", "./DateUtils
                 const finalCalendarDate = ibpCalendarData.at(-1);
                 const findIndex = newData.findIndex(el => new Date(el.PERIODEND) == new Date(finalCalendarDate.PERIODEND));
                 if (findIndex != -1) {
-                    newData = newData.filter(el=> new Date(el.PERIODEND) > new Date(finalCalendarDate.PERIODEND));
+                    newData = newData.filter(el => new Date(el.PERIODEND) > new Date(finalCalendarDate.PERIODEND));
                     // newData = newData.filter(findIndex + 1);
                 }
                 else {
@@ -204,7 +209,7 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/model/json/JSONModel", "./DateUtils
                 const findIndex = ibpCalendarData.findIndex(el => getISO(new Date(el.PERIODEND)) == getExcelDate(startExcelDate.PERIODEND));
                 if (findIndex != -1) {
                     // ibpCalendarData = ibpCalendarData.slice(0, findIndex);
-                    ibpCalendarData = ibpCalendarData.filter(el=> getISO(new Date(el.PERIODEND)) < getExcelDate(startExcelDate.PERIODEND));
+                    ibpCalendarData = ibpCalendarData.filter(el => getISO(new Date(el.PERIODEND)) < getExcelDate(startExcelDate.PERIODEND));
                 }
                 else {
                     //check if excel data is a continuity of calendar data
@@ -232,7 +237,7 @@ sap.ui.define(["sap/m/MessageToast", "sap/ui/model/json/JSONModel", "./DateUtils
                 const findIndex = newData.findIndex(el => getExcelDate(el.PERIODEND) == getISO(new Date(endCalDate.PERIODEND)));
                 if (findIndex != -1) {
                     // newData = newData.slice(findIndex + 1);
-                    newData=newData.filter(el => getExcelDate(el.PERIODEND) > getISO(new Date(endCalDate.PERIODEND)));
+                    newData = newData.filter(el => getExcelDate(el.PERIODEND) > getISO(new Date(endCalDate.PERIODEND)));
                 }
                 else {
                     //check if excel data is a continuity of calendar data
