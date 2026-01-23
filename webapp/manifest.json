@@ -60,7 +60,7 @@
   "sap.ui5": {
     "flexEnabled": true,
     "dependencies": {
-      "minUI5Version": "1.124.11",
+      "minUI5Version": "1.120.41",
       "libs": {
         "sap.m": {},
         "sap.ui.core": {}
@@ -141,6 +141,6 @@
       "$XSAPPNAME.User",
       "$XSAPPNAME.admin"
     ],
-    "ui5VersionNumber": "1.124.11"
+    "ui5VersionNumber": "1.120.41"
   }
 }
